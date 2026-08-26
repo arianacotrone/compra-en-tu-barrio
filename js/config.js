@@ -12,7 +12,7 @@ window.SITE_CONFIG = {
 
   // URL del CSV publicado de tu Google Sheet (Archivo > Compartir > Publicar en la web > CSV).
   // Dejalo vacío ("") para que el sitio muestre datos de ejemplo mientras armás la planilla real.
-  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2mvjaqetZG0Tqd_O0tHnsA4MY7vaf_9MF6HgaOagXlb94YvINTxz2zYFwXdgHGw/pubhtml",
+  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2mvjaqetZG0Tqd_O0tHnsA4MY7vaf_9MF6HgaOagXlb94YvINTxz2zYFwXdgHGw/pub?output=csv",
 
   // Botón "Farmacias de turno": a dónde lleva. Por defecto abre FarmaciasDeTurnoYa filtrado en Rafael Calzada.
   farmaciasDeTurnoUrl:
