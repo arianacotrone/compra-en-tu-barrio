@@ -1,0 +1,356 @@
+:root {
+  --color-primario: #2f5233;
+  --color-primario-oscuro: #1f3a22;
+  --color-acento: #e8a33d;
+  --color-fondo: #faf7f2;
+  --color-superficie: #ffffff;
+  --color-texto: #22271f;
+  --color-texto-suave: #5b6358;
+  --color-borde: #e6e0d4;
+  --color-whatsapp: #25d366;
+  --radio: 14px;
+  --sombra: 0 2px 10px rgba(34, 39, 31, 0.08);
+  --sombra-hover: 0 6px 20px rgba(34, 39, 31, 0.14);
+  --btn-wa-fondo: #e9fbef;
+  --btn-wa-texto: #128a3e;
+  --btn-wa-borde: #bfeccd;
+  --btn-mapa-fondo: #eef3ff;
+  --btn-mapa-texto: #2952a3;
+  --btn-mapa-borde: #cddbf6;
+  font-size: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-fondo: #171d16;
+    --color-superficie: #212822;
+    --color-texto: #edf1ea;
+    --color-texto-suave: #a7b2a1;
+    --color-borde: #333d31;
+    --sombra: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --sombra-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --btn-wa-fondo: #16301f;
+    --btn-wa-texto: #6bdb95;
+    --btn-wa-borde: #285437;
+    --btn-mapa-fondo: #172236;
+    --btn-mapa-texto: #8fb0f0;
+    --btn-mapa-borde: #2a3c5c;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-fondo: #171d16;
+  --color-superficie: #212822;
+  --color-texto: #edf1ea;
+  --color-texto-suave: #a7b2a1;
+  --color-borde: #333d31;
+  --sombra: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --sombra-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --btn-wa-fondo: #16301f;
+  --btn-wa-texto: #6bdb95;
+  --btn-wa-borde: #285437;
+  --btn-mapa-fondo: #172236;
+  --btn-mapa-texto: #8fb0f0;
+  --btn-mapa-borde: #2a3c5c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+.contenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* ---------- Encabezado ---------- */
+
+.encabezado {
+  background: linear-gradient(135deg, var(--color-primario), var(--color-primario-oscuro));
+  color: #fff;
+  padding: 2rem 0 2.5rem;
+}
+
+.encabezado__contenido {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.encabezado__texto {
+  flex: 1 1 320px;
+  max-width: 640px;
+}
+
+.encabezado__marca {
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: 0 0 0.35rem;
+}
+
+.encabezado__titulo {
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  margin: 0 0 0.6rem;
+  font-weight: 800;
+}
+
+.encabezado__bajada {
+  margin: 0;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 46ch;
+}
+
+/* ---------- Panel lateral (comercios + farmacias) ---------- */
+
+.panel {
+  flex: 0 0 260px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radio);
+  padding: 1.1rem 1.2rem;
+  backdrop-filter: blur(2px);
+}
+
+.panel__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.panel__stat-num {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--color-acento);
+}
+
+.panel__stat-label {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.btn-farmacias {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--color-acento);
+  color: #2a1e05;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-farmacias:hover,
+.btn-farmacias:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.btn-farmacias svg { width: 18px; height: 18px; fill: currentColor; }
+
+.panel__nota {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- Selector Lista / Mapa ---------- */
+
+.selector {
+  display: inline-flex;
+  gap: 0.3rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  padding: 0.3rem;
+  margin: 1.5rem 0 1.25rem;
+}
+
+.selector__btn {
+  border: none;
+  background: transparent;
+  padding: 0.55rem 1.3rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+}
+
+.selector__btn.is-activo {
+  background: var(--color-primario);
+  color: #fff;
+}
+
+.aviso-demo {
+  background: #fff4da;
+  border: 1px solid #f0d69a;
+  color: #6b5210;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ---------- Grilla de tarjetas ---------- */
+
+.principal { padding: 0.5rem 0 3rem; }
+
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.1rem;
+}
+
+.grilla[hidden],
+.vista-mapa[hidden] {
+  display: none;
+}
+
+.mensaje-vacio {
+  color: var(--color-texto-suave);
+  padding: 2rem 0;
+}
+
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.tarjeta:hover { box-shadow: var(--sombra-hover); transform: translateY(-2px); }
+
+.tarjeta__portada {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, var(--color-primario), var(--color-acento));
+  overflow: hidden;
+}
+
+.tarjeta__portada img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tarjeta__inicial {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tarjeta__portada.sin-imagen .tarjeta__inicial { display: flex; }
+
+.tarjeta__cuerpo {
+  padding: 0.9rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.tarjeta__rubro {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primario);
+}
+
+.tarjeta__nombre {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.tarjeta__acciones {
+  margin-top: auto;
+  padding-top: 0.7rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--color-borde);
+}
+
+.btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+.btn--whatsapp { background: var(--btn-wa-fondo); color: var(--btn-wa-texto); border-color: var(--btn-wa-borde); }
+.btn--whatsapp:hover { background: var(--color-whatsapp); color: #06280f; }
+
+.btn--mapa { background: var(--btn-mapa-fondo); color: var(--btn-mapa-texto); border-color: var(--btn-mapa-borde); }
+.btn--mapa:hover { background: var(--btn-mapa-texto); color: var(--color-superficie); }
+
+/* ---------- Vista de mapa ---------- */
+
+.vista-mapa iframe {
+  width: 100%;
+  height: min(70vh, 620px);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+
+/* ---------- Pie ---------- */
+
+.pie {
+  text-align: center;
+  padding: 2rem 0 3rem;
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+.pie a { color: var(--color-primario); font-weight: 600; }
+
+/* ---------- Accesibilidad ---------- */
+
+:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .encabezado__contenido { flex-direction: column; }
+  .panel { flex-basis: auto; width: 100%; }
+}
