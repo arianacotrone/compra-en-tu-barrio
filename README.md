@@ -1,6 +1,6 @@
 # Compra en tu Barrio — Rafael Calzada
 
-Sitio estático (HTML/CSS/JS puro, sin build ni dependencias) que lee los comercios desde tu Google Sheets y los muestra en tarjetas o en un mapa. Pensado para publicarse en GitHub Pages con un dominio propio.
+Sitio estático (HTML/CSS/JS puro, sin build ni dependencias) que lee los comercios desde un Google Sheets y los muestra en tarjetas o en un mapa. Pensado para publicarse en GitHub Pages con un dominio propio.
 
 ## 1. Completar y publicar la planilla
 
