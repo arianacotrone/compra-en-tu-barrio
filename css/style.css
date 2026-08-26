@@ -1,10 +1,10 @@
 :root {
-  --color-primario: #2f5233;
+  --color-primario: #1e3a8a;
   --color-primario-oscuro: #1f3a22;
-  --color-acento: #e8a33d;
+  --color-acento: #f59e0b;
   --color-fondo: #faf7f2;
   --color-superficie: #ffffff;
-  --color-texto: #22271f;
+  --color-texto: #0f172a;
   --color-texto-suave: #5b6358;
   --color-borde: #e6e0d4;
   --color-whatsapp: #25d366;
@@ -22,7 +22,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-fondo: #171d16;
+    --color-fondo: #f8fafc;
     --color-superficie: #212822;
     --color-texto: #edf1ea;
     --color-texto-suave: #a7b2a1;
