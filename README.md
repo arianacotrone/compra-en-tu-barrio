@@ -1,6 +1,6 @@
 # Compra en tu Barrio — Rafael Calzada
 
-Sitio estático (HTML/CSS/JS puro, sin build ni dependencias) que lee los comercios desde un Google Sheets y los muestra en tarjetas o en un mapa. Pensado para publicarse en GitHub Pages con un dominio propio.
+Sitio estático (HTML/CSS/JS puro, sin build ni dependencias) que lee los comercios desde tu Google Sheets y los muestra en tarjetas o en un mapa. Pensado para publicarse en GitHub Pages con un dominio propio.
 
 ## 1. Completar y publicar la planilla
 
@@ -46,7 +46,18 @@ El botón ya apunta a FarmaciasDeTurnoYa filtrado en Rafael Calzada (no hay API 
    - Modo del proxy de Cloudflare (nube naranja): podés dejarlo activado.
 6. En el repo de GitHub, **Settings > Pages > Custom domain**, escribí tu dominio y guardá (esto crea un archivo `CNAME` en el repo). Esperá unos minutos y activá "Enforce HTTPS".
 
-## 5. Replicar el sitio en otro barrio
+## 5. Publicidad (rieles laterales)
+
+El sitio ya trae dos espacios publicitarios verticales, uno a cada lado del contenido. Solo se muestran en pantallas grandes (a partir de ~1500px de ancho) — en notebooks, tablets y celulares quedan ocultos, así que nunca compiten con las tarjetas ni con la búsqueda. Por defecto muestran un cartel "¿Querés que tu comercio aparezca acá?" con un botón que lleva a tu WhatsApp o mail (configuralo en `js/config.js`, campo `contactoPublicidadUrl`).
+
+Tenés dos caminos, que podés combinar:
+
+- **Comercio patrocinado** (recomendado para empezar): le cobrás a un comercio del barrio por aparecer ahí un tiempo. Es lo que el sitio trae armado de fábrica — solo tenés que reemplazar el texto/link de `.riel__slot` en `index.html` por el nombre y WhatsApp del comercio que patrocina, cuando consigas uno. Con el tráfico chico de un piloto en un solo barrio, esto suele rendir mucho más rápido que la publicidad programática: le estás vendiendo a un comercio acceso directo a sus vecinos, que es exactamente tu audiencia.
+- **Google AdSense**: para que esos mismos espacios muestren anuncios automáticos de Google. Necesitás: (1) crear una cuenta en [adsense.google.com](https://adsense.google.com) y que te aprueben el sitio (piden contenido propio suficiente y algo de tráfico — con un piloto recién arrancando puede tardar en aprobarse); (2) agregar el script de AdSense en el `<head>` de `index.html`; (3) reemplazar el contenido de cada `.riel__slot` por el `<ins class="adsbygoogle">` que te da Google (dejé un comentario en `index.html` marcando exactamente dónde); (4) subir un archivo `ads.txt` en la raíz del sitio con tu ID de editor; (5) tener una página de política de privacidad publicada (Google la exige).
+
+Mi sugerencia: arrancá con comercios patrocinados (rápido, sin aprobaciones, y coherente con la idea del proyecto) y sumá AdSense más adelante si el tráfico crece y te sobra espacio.
+
+## 6. Replicar el sitio en otro barrio
 
 Todo lo que cambia entre barrios está en un solo archivo: `js/config.js` (nombre del barrio, bajada, planilla, mapa, colores). Para un barrio nuevo:
 
