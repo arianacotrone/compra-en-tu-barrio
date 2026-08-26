@@ -1,23 +1,22 @@
 :root {
-  --color-primario: #2f5233;
+  --color-primario: #1e3a8a;
   --color-primario-oscuro: #1f3a22;
-  --color-acento: #e8a33d;
-  --color-fondo: #faf7f2;
+  --color-acento: #f59e0b;
+  --color-fondo: #f8fafc;
   --color-superficie: #ffffff;
-  --color-texto: #22271f;
+  --color-texto: #0f172a;
   --color-texto-suave: #5b6358;
-  --color-borde: #e6e0d4;
+  --color-borde: #cbd5e1;
   --color-whatsapp: #25d366;
-  --radio: 14px;
-  --sombra: 0 2px 10px rgba(34, 39, 31, 0.08);
-  --sombra-hover: 0 6px 20px rgba(34, 39, 31, 0.14);
-  --btn-wa-fondo: #e9fbef;
-  --btn-wa-texto: #128a3e;
-  --btn-wa-borde: #bfeccd;
-  --btn-mapa-fondo: #eef3ff;
-  --btn-mapa-texto: #2952a3;
-  --btn-mapa-borde: #cddbf6;
-  font-size: 16px;
+  --radio: 12px;
+  --sombra: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --sombra-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --btn-wa-fondo: #dcfce7;
+  --btn-wa-texto: #15803d;
+  --btn-wa-borde: #bbf7d0;
+  --btn-mapa-fondo: #f1f5f9;
+  --btn-mapa-texto: #334155;
+  --btn-mapa-borde: #e2e8f0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -249,7 +248,7 @@ a { color: inherit; }
   display: block;
   position: relative;
   aspect-ratio: 16 / 10;
-  background: linear-gradient(135deg, var(--color-primario), var(--color-acento));
+  background: #0f5132; /* Color sólido sin degradados pesados */
   overflow: hidden;
 }
 
