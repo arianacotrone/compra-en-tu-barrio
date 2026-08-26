@@ -8,7 +8,7 @@ window.SITE_CONFIG = {
 
   // Bajada / texto de presentación debajo del encabezado
   bajada:
-    "Las vidrieras de tu barrio, ahora en tu celular. Mirá qué tiene cada comercio y contactate directo con tu vecino para hacer tu compra.",
+    "Las vidrieras de Rafael Calzada, unificadas. Explorá el stock de cada comercio y cerrá tu pedido por WhatsApp.",
 
   // URL del CSV publicado de tu Google Sheet (Archivo > Compartir > Publicar en la web > CSV).
   // Dejalo vacío ("") para que el sitio muestre datos de ejemplo mientras armás la planilla real.
@@ -25,7 +25,9 @@ window.SITE_CONFIG = {
   // Usado solo como respaldo si no hay My Maps configurado, para centrar el mapa simple.
   barrioMapQuery: "Rafael Calzada, Almirante Brown, Buenos Aires, Argentina",
 
-  // Colores del barrio (podés cambiarlos para cada réplica)
-  colorPrimario: "#2F5233",
-  colorAcento: "#E8A33D",
+  // Color de acento del barrio. Dejalo vacío ("") para usar el azul por
+  // defecto, ya afinado para verse bien en modo claro y oscuro (css/style.css).
+  // Si ponés un color acá, se usa el MISMO en los dos modos — sirve para
+  // una réplica rápida, pero pierde el ajuste fino claro/oscuro.
+  colorPrimario: "",
 };
