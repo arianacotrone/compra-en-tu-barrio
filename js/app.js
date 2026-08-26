@@ -230,6 +230,14 @@
     if (CFG.colorPrimario) {
       document.documentElement.style.setProperty("--color-primario", CFG.colorPrimario);
     }
+    document.querySelectorAll(".riel__cta").forEach((a) => {
+      if (CFG.contactoPublicidadUrl) {
+        a.href = CFG.contactoPublicidadUrl;
+      } else {
+        a.removeAttribute("href");
+        a.setAttribute("aria-disabled", "true");
+      }
+    });
   }
 
   async function iniciar() {

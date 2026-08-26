@@ -30,4 +30,9 @@ window.SITE_CONFIG = {
   // Si ponés un color acá, se usa el MISMO en los dos modos — sirve para
   // una réplica rápida, pero pierde el ajuste fino claro/oscuro.
   colorPrimario: "",
+
+  // Publicidad: a dónde lleva el botón "Reservá este espacio" de los rieles
+  // laterales (solo visibles en pantallas grandes). Poné acá tu WhatsApp o
+  // email de contacto comercial. Si lo dejás vacío, el botón queda deshabilitado.
+  contactoPublicidadUrl: "",
 };
