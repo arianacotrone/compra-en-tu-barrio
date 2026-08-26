@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compra en tu Barrio — Rafael Calzada</title>
+  <meta name="description" content="Todos los comercios y servicios de Rafael Calzada en un solo lugar. Contactate directo con tus vecinos comerciantes por WhatsApp." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="encabezado">
+    <div class="contenedor encabezado__contenido">
+      <div class="encabezado__texto">
+        <p class="encabezado__marca">Compra en tu barrio</p>
+        <h1 class="encabezado__titulo">Compra en <span id="nombre-barrio">tu barrio</span></h1>
+        <p class="encabezado__bajada" id="texto-bajada">
+          Las vidrieras de tu barrio, ahora en tu celular. Contactate directo con tu vecino para gestionar tu compra.
+        </p>
+      </div>
+
+      <aside class="panel" aria-label="Resumen y farmacias de turno">
+        <div class="panel__stat">
+          <span class="panel__stat-num" id="contador-comercios">—</span>
+          <span class="panel__stat-label">comercios adheridos</span>
+        </div>
+        <a class="btn-farmacias" id="link-farmacias" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7v2h20V7L12 2zm-8 8v9h5v-6h6v6h5v-9H4z"/></svg>
+          Farmacias de turno
+        </a>
+        <p class="panel__nota">Se abre en un sitio externo con el turno del día.</p>
+      </aside>
+    </div>
+  </header>
+
+  <main class="contenedor principal">
+    <div class="selector" role="tablist" aria-label="Ver como">
+      <button class="selector__btn is-activo" type="button" data-vista="lista" role="tab" aria-selected="true">Lista</button>
+      <button class="selector__btn" type="button" data-vista="mapa" role="tab" aria-selected="false">Mapa</button>
+    </div>
+
+    <p class="aviso-demo" id="aviso-demo" hidden>
+      Mostrando datos de ejemplo — todavía no hay una planilla conectada (o no se pudo leer).
+    </p>
+
+    <section id="lista-comercios" class="grilla" aria-live="polite"></section>
+    <section id="vista-mapa" class="vista-mapa" hidden></section>
+  </main>
+
+  <footer class="pie">
+    <p>Compra en tu Barrio — un proyecto para acercar el comercio de cercanía. <a href="#">¿Tenés un comercio y querés sumarte?</a></p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/phone.js"></script>
+  <script src="js/csv.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
