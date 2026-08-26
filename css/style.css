@@ -1,49 +1,40 @@
 :root {
-  /* Paleta principal: Verde Esmeralda Sobrio + Ámbar Cálido */
-  --color-primario: #15803d;
-  --color-primario-oscuro: #166534;
-  --color-acento: #d97706;
-  --color-fondo: #f8fafc;
+  --color-primario: #2f5233;
+  --color-primario-oscuro: #1f3a22;
+  --color-acento: #e8a33d;
+  --color-fondo: #faf7f2;
   --color-superficie: #ffffff;
-  --color-texto: #0f172a;
-  --color-texto-suave: #475569;
-  --color-borde: #e2e8f0;
+  --color-texto: #22271f;
+  --color-texto-suave: #5b6358;
+  --color-borde: #e6e0d4;
   --color-whatsapp: #25d366;
-  
-  --radio: 12px;
-  --sombra: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --sombra-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  
-  /* Botones de acción */
-  --btn-wa-fondo: #f0fdf4;
-  --btn-wa-texto: #15803d;
-  --btn-wa-borde: #bbf7d0;
-  
-  --btn-mapa-fondo: #f8fafc;
-  --btn-mapa-texto: #334155;
-  --btn-mapa-borde: #cbd5e1;
-  
+  --radio: 14px;
+  --sombra: 0 2px 10px rgba(34, 39, 31, 0.08);
+  --sombra-hover: 0 6px 20px rgba(34, 39, 31, 0.14);
+  --btn-wa-fondo: #e9fbef;
+  --btn-wa-texto: #128a3e;
+  --btn-wa-borde: #bfeccd;
+  --btn-mapa-fondo: #eef3ff;
+  --btn-mapa-texto: #2952a3;
+  --btn-mapa-borde: #cddbf6;
   font-size: 16px;
 }
 
-/* Modo oscuro elegante (opcional si el usuario prefiere su sistema en dark mode) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-fondo: #0f172a;
-    --color-superficie: #1e293b;
-    --color-texto: #f8fafc;
-    --color-texto-suave: #94a3b8;
-    --color-borde: #334155;
-    --sombra: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    --sombra-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-    
-    --btn-wa-fondo: #064e3b;
-    --btn-wa-texto: #4ade80;
-    --btn-wa-borde: #047857;
-    
-    --btn-mapa-fondo: #334155;
-    --btn-mapa-texto: #e2e8f0;
-    --btn-mapa-borde: #475569;
+    --color-fondo: #171d16;
+    --color-superficie: #212822;
+    --color-texto: #edf1ea;
+    --color-texto-suave: #a7b2a1;
+    --color-borde: #333d31;
+    --sombra: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --sombra-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --btn-wa-fondo: #16301f;
+    --btn-wa-texto: #6bdb95;
+    --btn-wa-borde: #285437;
+    --btn-mapa-fondo: #172236;
+    --btn-mapa-texto: #8fb0f0;
+    --btn-mapa-borde: #2a3c5c;
   }
 }
 
@@ -84,66 +75,103 @@ a { color: inherit; }
 /* ---------- Encabezado ---------- */
 
 .encabezado {
-  background: linear-gradient(135deg, #14532d 0%, #166534 100%);
-  color: #ffffff;
-  padding: 2.5rem 0 3rem;
+  background: linear-gradient(135deg, var(--color-primario), var(--color-primario-oscuro));
+  color: #fff;
+  padding: 2rem 0 2.5rem;
+}
+
+.encabezado__contenido {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.encabezado__texto {
+  flex: 1 1 320px;
+  max-width: 640px;
 }
 
 .encabezado__marca {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.9rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #86efac; /* Verde claro brillante */
-  margin: 0 0 0.5rem;
+  opacity: 0.85;
+  margin: 0 0 0.35rem;
 }
 
 .encabezado__titulo {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  margin: 0 0 0.75rem;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  margin: 0 0 0.6rem;
   font-weight: 800;
-  line-height: 1.15;
 }
 
 .encabezado__bajada {
   margin: 0;
   font-size: 1.05rem;
-  color: #f0fdf4;
-  opacity: 0.9;
-  max-width: 48ch;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 46ch;
 }
 
-/* ---------- Panel lateral ---------- */
+/* ---------- Panel lateral (comercios + farmacias) ---------- */
 
 .panel {
-  flex: 0 0 270px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex: 0 0 260px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--radio);
-  padding: 1.25rem;
-  backdrop-filter: blur(8px);
+  padding: 1.1rem 1.2rem;
+  backdrop-filter: blur(2px);
+}
+
+.panel__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
 }
 
 .panel__stat-num {
-  font-size: 2.4rem;
+  font-size: 2.1rem;
   font-weight: 800;
-  color: #fef08a; /* Amarillo suave para resaltar el número */
-  line-height: 1;
+  color: var(--color-acento);
+}
+
+.panel__stat-label {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .btn-farmacias {
-  background: #f59e0b;
-  color: #78350f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--color-acento);
+  color: #2a1e05;
   font-weight: 700;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn-farmacias:hover {
-  background: #d97706;
-  color: #ffffff;
-  transform: translateY(-2px);
+.btn-farmacias:hover,
+.btn-farmacias:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
+
+.btn-farmacias svg { width: 18px; height: 18px; fill: currentColor; }
+
+.panel__nota {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* ---------- Selector Lista / Mapa ---------- */
