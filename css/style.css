@@ -78,6 +78,17 @@ a { color: inherit; }
   margin: 0 auto;
   padding: 0 1.25rem;
 }
+.placeholder-banner {
+  background: #fff3cd;
+  color: #664d03;
+  text-align: center;
+  padding: 10px 16px;
+  font-family: var(--sans);
+  font-size: 13px;
+  border-bottom: 2px dashed #e0b400;
+  position: relative;
+  z-index: 60;
+}
 
 /* ---------- Rieles de publicidad (laterales) ---------- */
 
