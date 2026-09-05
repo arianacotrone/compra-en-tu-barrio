@@ -1,0 +1,9 @@
+[
+  { "name": "Farmacia San Rafael", "addr": "Av. 20 de Septiembre 860", "phone": "11 4188 2001", "turnoDia": 0 },
+  { "name": "Farmacia del Pueblo", "addr": "Calle Mitre 410", "phone": "11 4188 2002", "turnoDia": 1 },
+  { "name": "Farmacia Central Calzada", "addr": "Calle Rivadavia 275", "phone": "11 4188 2003", "turnoDia": 2 },
+  { "name": "Farmacia Los Vecinos", "addr": "Calle Belgrano 730", "phone": "11 4188 2004", "turnoDia": 3 },
+  { "name": "Farmacia Santa Rita", "addr": "Av. Almirante Brown 505", "phone": "11 4188 2005", "turnoDia": 4 },
+  { "name": "Farmacia 20 de Septiembre", "addr": "Av. 20 de Septiembre 1420", "phone": "11 4188 2006", "turnoDia": 5 },
+  { "name": "Farmacia La Estación", "addr": "Calle Güemes 640", "phone": "11 4188 2007", "turnoDia": 6 }
+]
