@@ -106,7 +106,19 @@ Además, la vidriera carga en segundo plano un modelo de embeddings (`Xenova/par
 
 Además del cartel de rubro (el que dice "Ropa", "Carnicería", etc.), cada tarjeta de la vidriera ahora muestra una imagen chiquita a modo de logo del comercio. Por ahora son **placeholders de ejemplo**: un cuadrado de color con las iniciales del nombre del comercio (mismo color que usa el resto del sitio para ese comercio), generados automáticamente — no son logos reales de ningún comercio de Rafael Calzada. Están en `assets/img/comercios/` (un archivo `.png` por comercio) y el campo `logo` en `comercios.json` apunta a cada uno.
 
-Cuando tengas los logos reales de los comercios (los que ya tengan uno, aunque sea informal — el isologo de WhatsApp Business, por ejemplo), solo hay que reemplazar el archivo de imagen correspondiente o cambiar la ruta en `logo`. Si un comercio no tiene logo (`logo: null`), la tarjeta muestra el cartel de rubro de siempre, como antes — no queda ningún hueco vacío.
+Cuando tengas los logos reales de los comercios (los que ya tengan uno, aunque sea informal — el isologo de WhatsApp Business, por ejemplo), solo hay que reemplazar el archivo de imagen correspondiente o cambiar la ruta en `logo`. Si un comercio no tiene logo (`logo: null` o vacío), la tarjeta muestra el cartel de rubro de siempre, como antes — no queda ningún hueco vacío.
+
+### Cargar los logos reales desde una carpeta de Google Drive (sin tocar código)
+
+Si preferís no mandarme cada logo para que yo lo suba al sitio, podés manejarlos vos misma desde Drive:
+
+1. Subí los logos de los comercios a Drive (podés organizarlos todos en una misma carpeta, para tenerlos ordenados — el sitio no necesita que estén en un lugar específico, cada uno se referencia por su propio link).
+2. Para cada archivo: click derecho → **Compartir** → asegurate de que diga "Cualquier persona con el enlace" puede ver → **Copiar enlace**. Te da un link como `https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp.../view?usp=sharing`.
+3. Pegá ese link **tal cual, sin modificarlo**, en la columna `logo` de la fila de ese comercio en tu planilla de Sheets (la misma que ya armamos para `comercios.csv` — ver la sección de arriba). El sitio reconoce automáticamente que es un link de Drive y lo convierte solo en una imagen visible.
+
+No hace falta ninguna cuenta nueva, API key ni script — es la misma planilla que ya vas a estar editando para el resto del catálogo. Si en algún momento un logo no carga (por ejemplo, si el archivo se compartió como privado en vez de "cualquiera con el link"), la tarjeta de ese comercio simplemente vuelve a mostrar el cartel de rubro de siempre — nunca queda una tarjeta rota.
+
+**Aclaración honesta**: para convertir el link de Drive en una imagen, el sitio usa un endpoint de Google (`drive.google.com/thumbnail?id=...`) que es el que mejor funciona hoy para este uso, pero Google no lo garantiza oficialmente como una API estable — en la práctica es ampliamente usado y confiable para este fin, pero si en algún momento Google cambia su comportamiento y algún logo deja de verse, avisame y lo migramos a otra forma de alojar las imágenes (por ejemplo, subiéndolas directamente a la carpeta `assets/img/comercios/` del sitio, como los placeholders actuales).
 
 ## Cargar los datos desde Google Sheets en vez de editar los JSON a mano (opcional)
 
@@ -139,7 +151,7 @@ Si dejás `SHEETS_CONFIG` vacío (como viene por defecto) o si la planilla no ca
 
 - Las cuentas de vecino/comerciante se guardan en el navegador (localStorage), no en una base de datos compartida real — ver la sección de arriba.
 - El umbral de la búsqueda semántica (`SEMANTIC_SCORE_THRESHOLD` en `assets/site.js`, hoy en `0.6`) se subió después de ver un resultado real sin sentido, pero sigue siendo una estimación — puede necesitar otro ajuste con más uso real (ver la sección del buscador, arriba).
-- Los logos de los comercios son placeholders generados automáticamente (iniciales sobre un color), no los logos reales de ningún comercio.
+- Los logos de los comercios son placeholders generados automáticamente (iniciales sobre un color), no los logos reales de ningún comercio — están listos para reemplazarse por links de Drive (ver la sección de arriba).
 - La lectura desde Google Sheets (`SHEETS_CONFIG`) está lista y probada de forma estructural, pero no contra una planilla real ya publicada — ver la sección de arriba.
 - La cuota societaria se menciona sin monto.
 - El mapa usa OpenStreetMap en lugar de Google Maps (falta la API key de Google) y las ubicaciones de los comercios son ilustrativas, no geocodificación real.
