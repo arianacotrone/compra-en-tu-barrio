@@ -1,79 +1,29 @@
-# Compra en tu Barrio — Rafael Calzada
+# Calzada Compra — archivos para subir al dominio
 
-Sitio estático (HTML/CSS/JS puro, sin build ni dependencias) que lee los comercios desde tu Google Sheets y los muestra en tarjetas o en un mapa. Pensado para publicarse en GitHub Pages con un dominio propio.
+Este ZIP tiene todo lo necesario para publicar el prototipo en tu hosting. Es un sitio de una sola página, sin backend: no necesita Node, PHP ni base de datos.
 
-## 1. Completar y publicar la planilla
+## Qué hay acá
 
-1. Abrí el archivo `Comercios_Rafael_Calzada.xlsx` que te pasé y subilo a tu Google Drive (arrastralo a Drive, o "Nuevo > Subir archivo"). Al abrirlo, Drive te va a ofrecer convertirlo a Google Sheets — aceptá.
-2. Cargá un comercio por fila en la hoja **Comercios** (la hoja **Instrucciones** tiene el detalle de cada columna).
-3. Cuando tengas los primeros datos cargados: **Archivo > Compartir > Publicar en la web**.
-   - Elegí la hoja **Comercios** (no "todo el libro").
-   - Formato: **Valores separados por comas (.csv)**.
-   - Publicá y copiá el link que te da (termina en `output=csv`).
-4. Pegá ese link en `js/config.js`, en `sheetCsvUrl`.
+- **`index.html`** — el sitio completo. Todo el CSS y el JS están adentro del mismo archivo (incluido el logo, como imagen embebida), así que es el único archivo que realmente hace falta.
+- **`favicon.ico`** — el ícono de pestaña del navegador, generado a partir del logo de la Cámara.
+- **`README.md`** — este archivo.
 
-Cualquier cambio que hagas en la planilla después se ve reflejado en el sitio en un par de minutos (Google Sheets tarda un poco en actualizar la versión publicada), sin que yo tenga que tocar nada.
+## Cómo subirlo
 
-> Mientras `sheetCsvUrl` esté vacío, el sitio muestra 6 comercios de ejemplo para que puedas ver el diseño funcionando.
+1. Entrá al panel de tu hosting (cPanel, Plesk, FTP — lo que uses para esparco.com.ar/faryco.com.ar).
+2. Andá a la carpeta raíz del dominio o subdominio donde quieras publicarlo (normalmente `public_html/` o la carpeta del subdominio si lo colgás de algo como `calzadacompra.esparco.com.ar` o un dominio propio de la Cámara).
+3. Subí `index.html` y `favicon.ico` a esa carpeta.
+4. Listo — al entrar al dominio ya debería cargar la home.
 
-### Imágenes de portada
+Si preferís GitHub Pages (como hiciste con `arianacotrone.github.io/EJEC`): creá el repo, subí estos dos archivos a la raíz, activá Pages apuntando a la rama principal, y si vas a usar un dominio propio agregá el archivo `CNAME` con ese dominio.
 
-Para cada imagen: subila a Drive, click derecho > **Compartir** > cambiá a "Cualquier persona con el enlace", copiá el link y pegalo en la columna correspondiente. El sitio acepta cualquier variante de link de Drive (lo normaliza solo).
+## Importante: esto todavía es un prototipo de demostración
 
-## 2. Armar el mapa (Google My Maps)
+Antes de mostrarlo como el sitio "real" de la Cámara, tené en cuenta que:
 
-1. Andá a [mymaps.google.com](https://mymaps.google.com) y creá un mapa nuevo.
-2. Agregá un pin por cada comercio con local físico (nombre + dirección).
-3. **Compartir > Insertar en mi sitio web**, copiá la URL que te da (la del `<iframe src="...">`).
-4. Pegala en `js/config.js`, en `myMapsEmbedUrl`.
+- **Los 10 comercios de la vidriera son ficticios** (nombres, direcciones y teléfonos inventados para cubrir los rubros pedidos). Hay que reemplazarlos por los comercios socios reales — lo más prolijo sería que me pases el Excel real y te genero el HTML actualizado, en vez de editarlo a mano.
+- **El formulario de registro (vecino/comerciante) no guarda datos.** Es una maqueta del flujo: al enviarlo muestra una pantalla de confirmación, pero no hay backend ni base de datos detrás todavía.
+- **La cuota societaria se menciona pero sin monto** — quedó como texto genérico hasta que definan el valor con la Cámara.
+- El buscador en lenguaje natural funciona con un diccionario de palabras clave hecho a mano sobre estos 10 comercios de ejemplo — con más comercios reales conviene revisar que las palabras clave de cada uno sigan siendo representativas.
 
-Si lo dejás vacío, el sitio muestra mientras tanto un mapa simple de Google Maps centrado en el barrio (sin pines individuales).
-
-## 3. Farmacias de turno
-
-El botón ya apunta a FarmaciasDeTurnoYa filtrado en Rafael Calzada (no hay API pública gratuita para esto, ver más abajo). Si más adelante conseguís una fuente propia (por ejemplo el calendario del Colegio de Farmacéuticos de Almirante Brown), cambiá `farmaciasDeTurnoUrl` en `js/config.js`, o pedime que arme una hoja de turnos propia dentro del mismo Google Sheets.
-
-## 4. Publicar en GitHub Pages + dominio propio
-
-1. Creá un repositorio nuevo en tu cuenta de GitHub (público, para que Pages sea gratis) y subí el contenido de esta carpeta (`index.html`, `css/`, `js/`) a la raíz del repo.
-2. En el repo: **Settings > Pages > Source**, elegí la rama `main` y carpeta `/root`. Guardá.
-   - GitHub te va a dar una URL tipo `tuusuario.github.io/nombre-repo`. Ya con eso el sitio está online.
-3. Comprá el dominio en [nic.ar](https://nic.ar) (para `.com.ar`) o en el registrador que prefieras.
-4. Pasá el dominio a Cloudflare (gratis): en Cloudflare, **Add a site**, seguís el asistente, y cambiás los *nameservers* del dominio en nic.ar por los que te da Cloudflare.
-5. En Cloudflare, agregá estos registros DNS:
-   - Un registro **CNAME** con nombre `www` apuntando a `tuusuario.github.io`.
-   - Cuatro registros **A** en el nombre raíz (`@`) apuntando a las IPs de GitHub Pages: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`.
-   - Modo del proxy de Cloudflare (nube naranja): podés dejarlo activado.
-6. En el repo de GitHub, **Settings > Pages > Custom domain**, escribí tu dominio y guardá (esto crea un archivo `CNAME` en el repo). Esperá unos minutos y activá "Enforce HTTPS".
-
-## 5. Publicidad (rieles laterales)
-
-El sitio ya trae dos espacios publicitarios verticales, uno a cada lado del contenido. Solo se muestran en pantallas grandes (a partir de ~1500px de ancho) — en notebooks, tablets y celulares quedan ocultos, así que nunca compiten con las tarjetas ni con la búsqueda. Por defecto muestran un cartel "¿Querés que tu comercio aparezca acá?" con un botón que lleva a tu WhatsApp o mail (configuralo en `js/config.js`, campo `contactoPublicidadUrl`).
-
-Tenés dos caminos, que podés combinar:
-
-- **Comercio patrocinado** (recomendado para empezar): le cobrás a un comercio del barrio por aparecer ahí un tiempo. Es lo que el sitio trae armado de fábrica — solo tenés que reemplazar el texto/link de `.riel__slot` en `index.html` por el nombre y WhatsApp del comercio que patrocina, cuando consigas uno. Con el tráfico chico de un piloto en un solo barrio, esto suele rendir mucho más rápido que la publicidad programática: le estás vendiendo a un comercio acceso directo a sus vecinos, que es exactamente tu audiencia.
-- **Google AdSense**: para que esos mismos espacios muestren anuncios automáticos de Google. Necesitás: (1) crear una cuenta en [adsense.google.com](https://adsense.google.com) y que te aprueben el sitio (piden contenido propio suficiente y algo de tráfico — con un piloto recién arrancando puede tardar en aprobarse); (2) agregar el script de AdSense en el `<head>` de `index.html`; (3) reemplazar el contenido de cada `.riel__slot` por el `<ins class="adsbygoogle">` que te da Google (dejé un comentario en `index.html` marcando exactamente dónde); (4) subir un archivo `ads.txt` en la raíz del sitio con tu ID de editor; (5) tener una página de política de privacidad publicada (Google la exige).
-
-Mi sugerencia: arrancá con comercios patrocinados (rápido, sin aprobaciones, y coherente con la idea del proyecto) y sumá AdSense más adelante si el tráfico crece y te sobra espacio.
-
-## 6. Replicar el sitio en otro barrio
-
-Todo lo que cambia entre barrios está en un solo archivo: `js/config.js` (nombre del barrio, bajada, planilla, mapa, colores). Para un barrio nuevo:
-
-1. Duplicá esta carpeta completa (o el repo de GitHub).
-2. Armá una planilla nueva a partir de la misma plantilla (`Comercios_<Barrio>.xlsx`).
-3. Editá `js/config.js` con los datos del nuevo barrio.
-4. Subilo como un repo/sitio aparte (o a un subdominio, si preferís mantenerlos bajo un mismo dominio raíz).
-
-## Estructura de archivos
-
-```
-index.html          → estructura de la página
-css/style.css        → todos los estilos (funciona en modo claro y oscuro)
-js/config.js          → lo único que hay que editar para personalizar/replicar
-js/demo-data.js      → datos de ejemplo (fallback si no hay planilla conectada)
-js/csv.js            → lector de CSV + mapeo de columnas de la planilla
-js/phone.js          → normalizador de números de WhatsApp argentinos
-js/app.js            → lógica de la página (carga de datos, tarjetas, selector lista/mapa)
-```
+Cuando quieras avanzar a la siguiente etapa (comercios reales, registro con base de datos, tabla comparativa de productos), avisame y seguimos desde acá.
