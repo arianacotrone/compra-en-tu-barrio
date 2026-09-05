@@ -243,9 +243,42 @@ function rubroLabel(key) {
 }
 function iconFor(key) { return ICONS[key] || ICONS.minorista; }
 
-// Si el logo de un comercio no carga (ruta rota, archivo que todavía no
-// se subió, etc.), lo reemplazamos por el mismo ícono genérico de rubro
-// que se usaba antes de tener logos — así ninguna tarjeta queda rota.
+// Convierte un link de "Compartir" de Google Drive (el que copia cualquiera
+// sin saber nada técnico) en una URL que sirve la imagen directamente, para
+// poder usarla como src de un <img>. Así, en la planilla de comercios, la
+// columna "logo" puede tener pegado el link tal cual lo da Drive al tocar
+// "Compartir → Copiar enlace" — no hace falta ningún formato especial.
+// Soporta los formatos más comunes:
+//   https://drive.google.com/file/d/ID/view?usp=sharing
+//   https://drive.google.com/open?id=ID
+//   https://drive.google.com/uc?id=ID  (o con &export=view)
+//   o directamente el ID pegado solo
+// Si "logo" no es un link de Drive (por ejemplo una ruta local como
+// assets/img/logo.png, o ya una URL de imagen de otro lado), se devuelve
+// tal cual, sin tocarlo.
+function driveFileIdFrom(text) {
+  let m = text.match(/\/d\/([a-zA-Z0-9_-]{15,})/);
+  if (m) return m[1];
+  m = text.match(/[?&]id=([a-zA-Z0-9_-]{15,})/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9_-]{15,}$/.test(text)) return text;
+  return null;
+}
+function resolveLogoUrl(raw) {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  if (!trimmed) return null;
+  if (/drive\.google\.com/.test(trimmed) || /^[a-zA-Z0-9_-]{15,}$/.test(trimmed)) {
+    const id = driveFileIdFrom(trimmed);
+    if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w200';
+  }
+  return trimmed;
+}
+
+// Si el logo de un comercio no carga (link roto, archivo que todavía no
+// se compartió como "cualquiera con el link", etc.), lo reemplazamos por
+// el mismo ícono genérico de rubro que se usaba antes de tener logos —
+// así ninguna tarjeta queda rota.
 function logoFallback(imgEl, rubro, accent) {
   const div = document.createElement('div');
   div.className = 'icon-badge';
@@ -377,11 +410,12 @@ function renderCards(list, q) {
       const webBtn = b.web
         ? '<a class="btn btn-outline btn-sm" href="https://' + b.web + '" target="_blank" rel="noopener">Ver sitio web</a>'
         : '<span class="web-pending">Sin sitio web — disponible con Espar Co.</span>';
+      const logoUrl = resolveLogoUrl(b.logo);
       return '<div class="card">'
         + '<div class="top" style="background:' + accent + '"></div>'
         + '<div class="card-body">'
-        + (b.logo
-            ? '<img class="card-logo" src="' + b.logo + '" alt="Logo de ' + escapeHtml(b.name) + '" onerror="logoFallback(this,\'' + b.rubro + '\',\'' + accent + '\')">'
+        + (logoUrl
+            ? '<img class="card-logo" src="' + logoUrl + '" alt="Logo de ' + escapeHtml(b.name) + '" onerror="logoFallback(this,\'' + b.rubro + '\',\'' + accent + '\')">'
             : '<div class="icon-badge" style="background:' + accent + '">' + iconFor(b.rubro) + '</div>')
         + '<span class="rubro-tag">' + rubroLabel(b.rubro) + '</span>'
         + '<h3>' + b.name + '</h3>'
