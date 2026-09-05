@@ -82,7 +82,8 @@ let BUSINESSES = [];      // se carga desde assets/data/comercios.json
 let DOC_INDEX = [];       // vectores TF-IDF, uno por comercio (mismo orden que BUSINESSES)
 let IDF = new Map();      // idf por término, calculado sobre todo el catálogo
 let CURRENT_RESULTS = []; // último resultado de búsqueda/filtro renderizado (para la vista de mapa)
-let FARMACIAS = [];       // se carga desde assets/data/farmacias.json
+let FARMACIAS = [];       // se carga desde la API de farmaturno.com.ar, Google Sheets o assets/data/farmacias.json
+let FARMACIAS_MODE = 'local'; // 'api' (farmaturno.com.ar, fechas reales) | 'sheet' | 'local' (día de la semana, ejemplo)
 
 /* ============================================================
    1) NORMALIZACIÓN, STOPWORDS Y STEMMER LIVIANO EN ESPAÑOL
@@ -687,11 +688,87 @@ function switchTab(tab) {
 
 /* ============================================================
    6) FARMACIAS DE TURNO
+   ---------------------------------------------------------
+   Orden de fuentes (la primera que funcione, gana):
+   1) La agenda pública en vivo de farmaturno.com.ar — fechas reales
+      de turno por farmacia, se actualiza sola.
+   2) La hoja de Google Sheets de farmaciasCsvUrl (día de la semana fijo,
+      editable a mano por la Cámara).
+   3) assets/data/farmacias.json (ejemplo local, siempre disponible).
+   Si el navegador no puede acceder a farmaturno.com.ar (por ejemplo
+   porque ese sitio no habilita CORS para otros dominios), se cae
+   automáticamente a la fuente siguiente — nunca rompe la página.
    ============================================================ */
 
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const FARMATURNO_API_URL = 'https://farmaturno.com.ar/api/farmacias';
+
+function todayYYYYMMDD() {
+  const d = new Date();
+  return '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+}
+
+function fechaDesdeYYYYMMDD(yyyymmdd) {
+  return new Date(+yyyymmdd.slice(0, 4), +yyyymmdd.slice(4, 6) - 1, +yyyymmdd.slice(6, 8));
+}
+
+function fechaCorta(yyyymmdd) {
+  const dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const f = fechaDesdeYYYYMMDD(yyyymmdd);
+  return dias[f.getDay()] + ' ' + f.getDate() + '/' + (f.getMonth() + 1);
+}
+
+function fechaLarga(yyyymmdd) {
+  const f = fechaDesdeYYYYMMDD(yyyymmdd);
+  const dia = DIAS_SEMANA[f.getDay()];
+  return dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + f.getDate() + ' de ' + MESES[f.getMonth()];
+}
+
+// "01-02-2026 al 15-02-2026" -> [Date, Date], o null si no hay formato reconocible.
+function parseVacaciones(str) {
+  if (!str) return null;
+  const m = /(\d{2})-(\d{2})-(\d{4})\s*al\s*(\d{2})-(\d{2})-(\d{4})/.exec(str);
+  if (!m) return null;
+  const start = new Date(+m[3], +m[2] - 1, +m[1]);
+  const end = new Date(+m[6], +m[5] - 1, +m[4]);
+  end.setHours(23, 59, 59, 999);
+  return [start, end];
+}
+
+function estaDeVacaciones(farmacia, fecha) {
+  const rango = parseVacaciones(farmacia.vacaciones);
+  return !!rango && fecha >= rango[0] && fecha <= rango[1];
+}
+
+function farmaciasFromApi(items) {
+  return (items || [])
+    .filter(o => o && o.name)
+    .map(o => ({
+      name: o.name,
+      addr: o.formatted_address || '',
+      phone: (o.phone !== undefined && o.phone !== null) ? String(o.phone) : '',
+      turnos: Array.isArray(o.turnos) ? o.turnos : [],
+      vacaciones: o.vacaciones || ''
+    }));
+}
 
 async function loadFarmacias() {
+  // 1) Fuente en vivo: agenda pública de farmaturno.com.ar.
+  try {
+    const res = await fetch(FARMATURNO_API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const items = Array.isArray(data) ? data : (data.Items || data.items || []);
+    const parsed = farmaciasFromApi(items);
+    if (!parsed.length) throw new Error('la API no devolvió farmacias');
+    FARMACIAS = parsed;
+    FARMACIAS_MODE = 'api';
+    return true;
+  } catch (err) {
+    console.warn('No se pudo leer la agenda en vivo de farmaturno.com.ar (puede ser una restricción de CORS del lado de ese sitio) — se prueba con un respaldo.', err);
+  }
+  // 2) Respaldo editable desde Google Sheets (día de la semana fijo).
   if (SHEETS_CONFIG.farmaciasCsvUrl) {
     try {
       const res = await fetch(SHEETS_CONFIG.farmaciasCsvUrl);
@@ -699,15 +776,18 @@ async function loadFarmacias() {
       const parsed = farmaciasFromCsvObjects(csvToObjects(await res.text()));
       if (!parsed.length) throw new Error('la hoja no tiene filas válidas (revisá la columna dia_de_turno: domingo, lunes, martes...)');
       FARMACIAS = parsed;
+      FARMACIAS_MODE = 'sheet';
       return true;
     } catch (err) {
       console.warn('No se pudo leer las farmacias desde Google Sheets — se usa assets/data/farmacias.json como respaldo.', err);
     }
   }
+  // 3) Respaldo local de ejemplo.
   try {
     const res = await fetch('assets/data/farmacias.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     FARMACIAS = await res.json();
+    FARMACIAS_MODE = 'local';
     return true;
   } catch (err) {
     console.error('Error cargando farmacias.json:', err);
@@ -715,7 +795,58 @@ async function loadFarmacias() {
   }
 }
 
-function renderFarmacias() {
+function renderFarmaciasApi() {
+  const hoyStr = todayYYYYMMDD();
+  const hoyFecha = fechaDesdeYYYYMMDD(hoyStr);
+  const turnoHoy = document.getElementById('farmaciaTurnoHoy');
+  const disponiblesHoy = FARMACIAS.filter(f => f.turnos.includes(hoyStr) && !estaDeVacaciones(f, hoyFecha));
+
+  if (turnoHoy) {
+    if (disponiblesHoy.length) {
+      const principal = disponiblesHoy[0];
+      const resto = disponiblesHoy.slice(1);
+      turnoHoy.className = 'turno-card';
+      turnoHoy.innerHTML =
+        '<span class="turno-badge">De turno hoy · ' + fechaLarga(hoyStr) + '</span>'
+        + '<h3>' + principal.name + '</h3>'
+        + (principal.addr ? '<div class="meta-line">📍 <a href="' + mapLink(principal.addr) + '" target="_blank" rel="noopener">' + principal.addr + '</a></div>' : '')
+        + (principal.phone ? '<div class="meta-line">📞 <a href="' + waLink(principal.phone, principal.name) + '" target="_blank" rel="noopener">' + principal.phone + '</a></div>' : '')
+        + (resto.length ? '<div class="meta-line">+ ' + resto.length + ' farmacia' + (resto.length > 1 ? 's' : '') + ' más de turno hoy: ' + resto.map(f => f.name).join(', ') + '</div>' : '');
+    } else {
+      turnoHoy.className = 'turno-loading';
+      turnoHoy.innerHTML = '<b>No encontramos una farmacia de turno cargada para hoy en la agenda de farmaturno.com.ar.</b>';
+    }
+  }
+
+  const semana = document.getElementById('farmaciaSemana');
+  if (semana) {
+    const porFecha = new Map();
+    FARMACIAS.forEach(f => {
+      f.turnos.forEach(fecha => {
+        if (fecha < hoyStr) return; // solo de hoy en adelante
+        if (!porFecha.has(fecha)) porFecha.set(fecha, []);
+        porFecha.get(fecha).push(f);
+      });
+    });
+    const fechas = Array.from(porFecha.keys()).sort().slice(0, 14);
+    const filas = fechas.map(fecha => {
+      const fechaObj = fechaDesdeYYYYMMDD(fecha);
+      const farmacias = porFecha.get(fecha).filter(f => !estaDeVacaciones(f, fechaObj));
+      if (!farmacias.length) return '';
+      const isToday = fecha === hoyStr;
+      const principal = farmacias[0];
+      const nombres = farmacias.map(f => f.name).join(', ');
+      return '<div class="farmacia-row' + (isToday ? ' is-today' : '') + '">'
+        + '<span class="dia-tag">' + fechaCorta(fecha) + '</span>'
+        + '<div><b>' + nombres + '</b><span class="addr">' + (principal.addr || '') + '</span></div>'
+        + (principal.phone ? '<a class="btn btn-outline btn-sm" href="' + waLink(principal.phone, principal.name) + '" target="_blank" rel="noopener">Contactar</a>' : '<span></span>')
+        + '</div>';
+    }).filter(Boolean);
+    semana.innerHTML = filas.length ? filas.join('') : '<p class="example-tag">No hay próximos turnos cargados todavía en la agenda.</p>';
+  }
+}
+
+function renderFarmaciasFallback() {
   const hoyIdx = new Date().getDay();
   const turnoHoy = document.getElementById('farmaciaTurnoHoy');
   if (turnoHoy) {
@@ -745,6 +876,24 @@ function renderFarmacias() {
         + '</div>';
     }).join('');
   }
+}
+
+function renderFarmaciasDisclaimer() {
+  const el = document.getElementById('farmaciasDisclaimer');
+  if (!el) return;
+  if (FARMACIAS_MODE === 'api') {
+    el.textContent = '* Turnos obtenidos en vivo desde la agenda pública de farmaturno.com.ar — se actualizan solos, no hace falta cargarlos a mano.';
+  } else if (FARMACIAS_MODE === 'sheet') {
+    el.textContent = '* No se pudo leer la agenda en vivo de farmaturno.com.ar en este momento — se muestran los turnos cargados a mano en la hoja de cálculo de la Cámara, como respaldo.';
+  } else {
+    el.textContent = '* Esta es una maqueta con farmacias y un cronograma de ejemplo (no se pudo leer ni la agenda en vivo de farmaturno.com.ar ni la hoja de cálculo de respaldo). El turno real de Rafael Calzada lo publica el Colegio de Farmacéuticos de la Provincia de Buenos Aires.';
+  }
+}
+
+function renderFarmacias() {
+  if (FARMACIAS_MODE === 'api') renderFarmaciasApi();
+  else renderFarmaciasFallback();
+  renderFarmaciasDisclaimer();
 }
 
 /* ============================================================
