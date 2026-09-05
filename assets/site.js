@@ -73,11 +73,6 @@ const ACCENTS = ['#15335c', '#c98a1e', '#2f5488', '#eea52a', '#5c6773', '#0b2038
 // armar el mismo texto por comercio que usa el motor de palabras clave
 window.RUBROS = RUBROS;
 
-const SUGGESTIONS = [
-  'se me cortó la luz', 'carne para el asado', 'un regalo para mi mamá', 'anteojos nuevos',
-  'ropa de invierno', 'mueble a medida', 'un juicio de tránsito', 'comprar por mayor'
-];
-
 // Atajos de "compras por ocasión" — pensados sobre todo para fechas especiales
 // (Día del Padre, Navidad, vuelta al cole, etc). Cada uno arma una búsqueda
 // como si el usuario la hubiera escrito él mismo (texto + opcionalmente un
@@ -92,8 +87,6 @@ const OCASIONES = [
 ];
 
 let BUSINESSES = [];      // se carga desde assets/data/comercios.json
-let DOC_INDEX = [];       // vectores TF-IDF, uno por comercio (mismo orden que BUSINESSES)
-let IDF = new Map();      // idf por término, calculado sobre todo el catálogo
 let CURRENT_RESULTS = []; // último resultado de búsqueda/filtro renderizado (para la vista de mapa)
 let FARMACIAS = [];       // se carga desde la API de farmaturno.com.ar, Google Sheets o assets/data/farmacias.json
 let FARMACIAS_MODE = 'local'; // 'api' (farmaturno.com.ar, fechas reales) | 'sheet' | 'local' (día de la semana, ejemplo)
@@ -148,107 +141,7 @@ function stemmedTokens(text) {
 }
 
 /* ============================================================
-   2) EXPANSIÓN DE SINÓNIMOS (mini-tesauro por concepto)
-   Cada grupo son palabras que, para este catálogo, significan
-   "lo mismo" a fines de búsqueda. Se guardan ya stemmizadas.
-   ============================================================ */
-const SYNONYM_GROUPS_RAW = [
-  ['luz', 'corte', 'cortocircuito', 'electricidad', 'instalacion electrica', 'tablero', 'enchufe', 'electricista'],
-  ['carne', 'asado', 'milanesa', 'achuras', 'vacio', 'parrilla', 'pollo', 'cerdo', 'carniceria', 'bife', 'chorizo', 'matambre', 'chinchulin', 'asadora'],
-  ['anteojos', 'lentes', 'lentes de sol', 'gafas', 'vista', 'optica', 'armazon', 'oftalmologo', 'ojos'],
-  ['abogado', 'abogada', 'legal', 'multa', 'juicio', 'divorcio', 'herencia', 'sucesion', 'tramite', 'derecho', 'demanda', 'denuncia'],
-  ['mueble', 'madera', 'placard', 'carpintero', 'carpinteria', 'melamina', 'ebanisteria', 'ropero', 'sillon', 'mesada', 'silla', 'mesa'],
-  ['tela', 'costura', 'retazo', 'merceria', 'hilo', 'tapiceria', 'cortina'],
-  ['mayorista', 'distribuidora', 'por mayor', 'reventa', 'mayoreo'],
-  ['ropa', 'indumentaria', 'vestimenta', 'moda', 'vestido', 'talles', 'uniforme', 'guardapolvo',
-   'remera', 'remeras', 'buzo', 'buzos', 'pantalon', 'pantalones', 'campera', 'camperas',
-   'zapatillas', 'calzado', 'pollera', 'polleras', 'short', 'shorts', 'medias', 'gorra',
-   'ropa interior', 'sweater', 'chaleco', 'jean', 'jeans'],
-  ['ferreteria', 'herramienta', 'tornillo', 'bazar', 'pintura', 'cerrajeria', 'candado', 'cerradura', 'llave', 'tuerca', 'destornillador', 'martillo'],
-  ['almacen', 'kiosco', 'despensa', 'autoservicio', 'fiambre', 'golosinas', 'verduleria', 'gaseosa', 'snack'],
-  ['regalo', 'regaleria', 'obsequio']
-];
-// pre-stemizamos cada grupo una sola vez
-const SYNONYM_GROUPS = SYNONYM_GROUPS_RAW.map(group =>
-  [...new Set(group.flatMap(phrase => stemmedTokens(phrase)))]
-);
-// índice inverso: stem -> índice de su grupo, para expandir rápido
-const SYNONYM_INDEX = new Map();
-SYNONYM_GROUPS.forEach((group, i) => group.forEach(s => SYNONYM_INDEX.set(s, i)));
-
-/* ============================================================
-   3) TF-IDF + SIMILITUD DE COSENO
-   ============================================================ */
-
-function termCounts(stems) {
-  const m = new Map();
-  stems.forEach(s => m.set(s, (m.get(s) || 0) + 1));
-  return m;
-}
-
-function buildIndex() {
-  const N = BUSINESSES.length;
-  const df = new Map();
-  const docStems = BUSINESSES.map(b => {
-    const text = [b.name, b.desc, rubroLabel(b.rubro), (b.tags || []).join(' ')].join(' ');
-    const stems = stemmedTokens(text);
-    new Set(stems).forEach(s => df.set(s, (df.get(s) || 0) + 1));
-    return stems;
-  });
-
-  IDF = new Map();
-  df.forEach((count, term) => IDF.set(term, Math.log((N + 1) / (count + 1)) + 1));
-
-  DOC_INDEX = docStems.map(stems => {
-    const tf = termCounts(stems);
-    const vec = new Map();
-    let normSq = 0;
-    tf.forEach((count, term) => {
-      const idf = IDF.get(term) || 0;
-      const w = count * idf;
-      vec.set(term, w);
-      normSq += w * w;
-    });
-    return { vec, norm: Math.sqrt(normSq) || 1 };
-  });
-}
-
-// Expande los tokens de una consulta con sus sinónimos (peso reducido)
-function expandQueryTerms(stems) {
-  const weights = new Map();
-  stems.forEach(s => {
-    weights.set(s, (weights.get(s) || 0) + 1); // término literal, peso completo
-    const gi = SYNONYM_INDEX.get(s);
-    if (gi !== undefined) {
-      SYNONYM_GROUPS[gi].forEach(rel => {
-        if (rel !== s) weights.set(rel, (weights.get(rel) || 0) + 0.6); // relacionado, peso parcial
-      });
-    }
-  });
-  return weights;
-}
-
-function cosineScore(queryWeights) {
-  let qNormSq = 0;
-  const qVec = new Map();
-  queryWeights.forEach((count, term) => {
-    const idf = IDF.get(term) || 0;
-    if (idf === 0) return; // término ausente del catálogo: no aporta
-    const w = count * idf;
-    qVec.set(term, w);
-    qNormSq += w * w;
-  });
-  const qNorm = Math.sqrt(qNormSq) || 1;
-
-  return DOC_INDEX.map(doc => {
-    let dot = 0;
-    qVec.forEach((w, term) => { if (doc.vec.has(term)) dot += w * doc.vec.get(term); });
-    return dot / (qNorm * doc.norm);
-  });
-}
-
-/* ============================================================
-   4) UI: render, filtros, buscador
+   2) UI: render, filtros, buscador
    ============================================================ */
 
 function rubroLabel(key) {
@@ -310,10 +203,6 @@ function populateSelects() {
   if (formSel) {
     formSel.innerHTML = RUBROS.map(r => '<option value="' + r.key + '">' + r.label + '</option>').join('');
   }
-  const chips = document.getElementById('chipsRow');
-  if (chips) {
-    chips.innerHTML = SUGGESTIONS.map(s => '<button onclick="quickSearch(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</button>').join('');
-  }
   const occasions = document.getElementById('occasionRow');
   if (occasions) {
     occasions.innerHTML = OCASIONES.map(o =>
@@ -335,73 +224,64 @@ function clearSearch() {
   renderCards(BUSINESSES);
 }
 
-// Umbral de corte para el motor semántico (similitud de coseno entre
-// embeddings). Lo subimos bastante (0.6) a propósito: una prueba real con
-// el modelo verdadero mostró que, para palabras sueltas y fuera de
-// contexto, puede dar puntajes altos a comercios que no tienen nada que
-// ver (ej: "buzo" encontrando una carnicería). Como el motor semántico
-// ahora es un REFUERZO sobre el buscador por palabras clave (no lo
-// reemplaza — ver runSearch), un umbral más exigente reduce esos falsos
-// positivos sin perder lo bueno: si el modelo está realmente seguro, igual
-// pasa; si está dudando, gana el buscador por palabras clave. Este
-// número se probó de forma estructural (con un modelo de prueba), no con
-// puntajes reales — si ves resultados raros, subilo más; si ves que le
-// cuesta encontrar cosas obvias, bajalo un poco.
-const SEMANTIC_SCORE_THRESHOLD = 0.6;
+// Junta, ya "stemmizadas", las palabras de las tags de un comercio por un
+// lado y las de su nombre/descripción/rubro por otro — separadas porque las
+// tags (las que carga la Cámara a mano pensando justo en la búsqueda) pesan
+// más que una coincidencia suelta en la descripción.
+function businessSearchTokens(b) {
+  return {
+    tagTokens: (b.tags || []).flatMap(t => stemmedTokens(t)),
+    textTokens: stemmedTokens([b.name, b.desc, rubroLabel(b.rubro)].join(' '))
+  };
+}
 
-let searchRequestId = 0;
-
-async function runSearch() {
+// Buscador simple y 100% predecible: sin sinónimos ni modelos de por medio,
+// matchea por tags (lo que carga la Cámara a mano para cada comercio, con
+// ese fin) y, en menor medida, por nombre/descripción/rubro. Cada palabra
+// de la búsqueda que aparece suma puntos; si la búsqueda entera aparece tal
+// cual dentro de una tag (por ejemplo, buscar "kiosco" y que el comercio
+// tenga la tag "kiosco"), eso pesa más que una coincidencia suelta.
+function runSearch() {
   const rawQuery = document.getElementById('searchInput').value.trim();
   const rubroFilter = document.getElementById('rubroSelect').value;
-  const requestId = ++searchRequestId; // evita pisar resultados si llegan búsquedas fuera de orden
   let list = BUSINESSES.slice();
 
   if (rawQuery) {
-    // el motor por palabras clave (TF-IDF + sinónimos) se calcula siempre:
-    // es instantáneo y es la base confiable de la búsqueda
-    const stems = stemmedTokens(rawQuery);
-    const queryWeights = expandQueryTerms(stems);
-    const keywordScores = cosineScore(queryWeights);
-
-    // el motor semántico es un REFUERZO opcional: si está listo, suma
-    // comercios que el buscador por palabras clave se perdió, pero no le
-    // saca a ningún resultado que el buscador por palabras clave ya
-    // encontró (así un mal puntaje semántico aislado no puede tapar un
-    // resultado bueno ni imponerse solo con un puntaje dudoso)
-    let semScores = null;
-    if (window.Semantic) {
-      semScores = await window.Semantic.semanticScores(rawQuery);
-      if (requestId !== searchRequestId) return; // el usuario ya escribió otra cosa mientras esperábamos
-    }
-
+    const queryTokens = stemmedTokens(rawQuery);
     const normQuery = norm(rawQuery);
 
     list = BUSINESSES
-      .map((b, i) => {
-        const literalBonus = (b.tags || []).some(t => norm(t) === normQuery || normQuery.includes(norm(t))) ? 0.2 : 0;
-        const keywordScore = keywordScores[i] + literalBonus;
-        const semanticScore = semScores ? semScores[i] : 0;
-        const passesKeyword = keywordScore > 0.05;
-        const passesSemantic = semanticScore > SEMANTIC_SCORE_THRESHOLD;
-        return { b, score: Math.max(keywordScore, passesSemantic ? semanticScore : 0), passes: passesKeyword || passesSemantic };
-      })
-      .filter(x => x.passes)
-      .sort((a, b2) => b2.score - a.score)
-      .map(x => x.b);
+      .map(b => {
+        let score = 0;
+        const literalTagHit = (b.tags || []).some(t => {
+          const nt = norm(t);
+          return nt === normQuery || nt.includes(normQuery) || normQuery.includes(nt);
+        });
+        if (literalTagHit) score += 5;
 
-    if (semScores && window.console && console.debug) {
-      // ayuda para calibrar el umbral con búsquedas reales: podés abrir la
-      // consola del navegador (F12), buscar algo y ver los puntajes acá
-      const top = BUSINESSES
-        .map((b, i) => ({ comercio: b.name, semantico: +semScores[i].toFixed(3) }))
-        .sort((a, c) => c.semantico - a.semantico)
-        .slice(0, 5);
-      console.debug('Puntajes semánticos más altos para "' + rawQuery + '" (umbral actual: ' + SEMANTIC_SCORE_THRESHOLD + '):', top);
-    }
+        const { tagTokens, textTokens } = businessSearchTokens(b);
+        queryTokens.forEach(qt => {
+          if (tagTokens.includes(qt)) score += 3;
+          else if (textTokens.includes(qt)) score += 1;
+        });
+
+        return { b, score };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, c) => c.score - a.score)
+      .map(x => x.b);
   }
   if (rubroFilter) list = list.filter(b => b.rubro === rubroFilter);
   renderCards(list, rawQuery);
+}
+
+// Enter en el campo de búsqueda hace lo mismo que tocar "Buscar".
+function wireSearchEnter() {
+  const input = document.getElementById('searchInput');
+  if (!input) return;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+  });
 }
 
 function mapLink(addr) {
@@ -1096,28 +976,11 @@ async function loadBusinesses() {
   }
 }
 
-// Estado del motor de búsqueda semántico, para mostrarlo en la vidriera
-// (assets/semantic.js dispara este evento; si ese archivo no está en la
-// página — por ejemplo en index.html o farmacias.html — esto no hace nada).
-function wireSemanticStatus() {
-  const el = document.getElementById('searchEngineStatus');
-  if (!el) return;
-  window.addEventListener('calzada:semantic-status', (e) => {
-    const messages = {
-      loading: '🧠 Preparando el buscador inteligente… puede tardar unos segundos la primera vez.',
-      ready: '🧠 Búsqueda inteligente activa: entiende el significado, no solo palabras exactas.',
-      unavailable: '' // se usa el motor por palabras clave sin avisar — sigue funcionando igual
-    };
-    el.className = 'search-engine-status' + (e.detail === 'ready' ? ' ready' : '');
-    el.textContent = messages[e.detail] || '';
-  });
-}
-
 async function init() {
   renderNavActions();
   wirePasswordFields();
   populateSelects();
-  wireSemanticStatus();
+  wireSearchEnter();
 
   const grid = document.getElementById('cardsGrid');
   if (grid) {
@@ -1127,7 +990,6 @@ async function init() {
       grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><b>No pudimos cargar el catálogo de comercios</b>Si abriste este archivo con doble clic desde tu computadora, el navegador bloquea la carga de assets/data/comercios.json por seguridad (CORS). Probalo subido a un hosting, o corriendo un servidor local (por ejemplo <code>python3 -m http.server</code>) y abriendo http://localhost:8000.</div>';
       return;
     }
-    buildIndex();
     renderCards(BUSINESSES);
     renderCompareTable();
     if (typeof initMapView === 'function') initMapView();
