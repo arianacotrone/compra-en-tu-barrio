@@ -37,7 +37,7 @@
    los datos reales ahí, y cuando quieras probarlos pegá la URL acá.
    ============================================================ */
 const SHEETS_CONFIG = {
-  comerciosCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQsDarnbD8Qgjjmvjuo4td6Dckvl_wJfnWvWiTdtVDNYsj1hkbNenFfoQlldseZdKNFSHkll_wGq_KE/pub?output=csv'
+  comerciosCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQsDarnbD8Qgjjmvjuo4td6Dckvl_wJfnWvWiTdtVDNYsj1hkbNenFfoQlldseZdKNFSHkll_wGq_KE/pub?output=csv',
   farmaciasCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQx06h6G506x6Y9hbsQZVLFCCNyhOPo43EkdVHHbF_l8YFpYrY-guW_3VQWFgvQuzaripL42r40n1NM/pub?output=csv'
 };
 
