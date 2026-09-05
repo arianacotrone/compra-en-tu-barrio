@@ -78,6 +78,19 @@ const SUGGESTIONS = [
   'ropa de invierno', 'mueble a medida', 'un juicio de tránsito', 'comprar por mayor'
 ];
 
+// Atajos de "compras por ocasión" — pensados sobre todo para fechas especiales
+// (Día del Padre, Navidad, vuelta al cole, etc). Cada uno arma una búsqueda
+// como si el usuario la hubiera escrito él mismo (texto + opcionalmente un
+// rubro), reusando el mismo buscador de siempre — no hace falta nada nuevo
+// del lado del motor de búsqueda. Para sumar uno nuevo alcanza con agregar
+// una línea acá (icon = un emoji, label = lo que se ve en el botón, query =
+// lo que se busca, rubro = una key de RUBROS para acotar, o '' para todos).
+const OCASIONES = [
+  { icon: '🎁', label: 'Día del Padre', query: 'regalo para el día del padre', rubro: '' },
+  { icon: '🧸', label: 'Regalos para chicos', query: 'juguete regalo para chicos', rubro: '' },
+  { icon: '👔', label: 'Ropa de hombre', query: 'ropa de hombre', rubro: 'ropa' }
+];
+
 let BUSINESSES = [];      // se carga desde assets/data/comercios.json
 let DOC_INDEX = [];       // vectores TF-IDF, uno por comercio (mismo orden que BUSINESSES)
 let IDF = new Map();      // idf por término, calculado sobre todo el catálogo
@@ -301,10 +314,18 @@ function populateSelects() {
   if (chips) {
     chips.innerHTML = SUGGESTIONS.map(s => '<button onclick="quickSearch(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</button>').join('');
   }
+  const occasions = document.getElementById('occasionRow');
+  if (occasions) {
+    occasions.innerHTML = OCASIONES.map(o =>
+      '<button onclick="quickSearch(\'' + o.query.replace(/'/g, "\\'") + '\',\'' + o.rubro + '\')">' + o.icon + ' ' + o.label + '</button>'
+    ).join('');
+  }
 }
 
-function quickSearch(text) {
+function quickSearch(text, rubro) {
   document.getElementById('searchInput').value = text;
+  const sel = document.getElementById('rubroSelect');
+  if (sel) sel.value = rubro || '';
   runSearch();
 }
 
@@ -391,11 +412,95 @@ function waLink(phone, name) {
   return 'https://wa.me/549' + digits + '?text=' + encodeURIComponent('Hola ' + name + ', te escribo desde Calzada Compra.');
 }
 
+// HTML de una tarjeta de comercio — se usa tanto en la grilla plana (resultado
+// de una búsqueda o de un rubro elegido) como en las filas tipo Netflix
+// (navegación libre, sin búsqueda ni rubro elegido).
+function cardHtml(b) {
+  const accent = ACCENTS[BUSINESSES.indexOf(b) % ACCENTS.length];
+  const webBtn = b.web
+    ? '<a class="btn btn-outline btn-sm" href="https://' + b.web + '" target="_blank" rel="noopener">Ver sitio web</a>'
+    : '<span class="web-pending">Sin sitio web — disponible con Espar Co.</span>';
+  const logoUrl = resolveLogoUrl(b.logo);
+  return '<div class="card">'
+    + '<div class="top" style="background:' + accent + '"></div>'
+    + '<div class="card-body">'
+    + (logoUrl
+        ? '<img class="card-logo" src="' + logoUrl + '" alt="Logo de ' + escapeHtml(b.name) + '" onerror="logoFallback(this,\'' + b.rubro + '\',\'' + accent + '\')">'
+        : '<div class="icon-badge" style="background:' + accent + '">' + iconFor(b.rubro) + '</div>')
+    + '<span class="rubro-tag">' + rubroLabel(b.rubro) + '</span>'
+    + '<h3>' + b.name + '</h3>'
+    + '<p class="desc">' + b.desc + '</p>'
+    + '<div class="meta-line">📍 <a href="' + mapLink(b.addr) + '" target="_blank" rel="noopener">' + b.addr + '</a></div>'
+    + '<div class="meta-line">📞 <a href="' + waLink(b.phone, b.name) + '" target="_blank" rel="noopener">' + b.phone + '</a></div>'
+    + '<div class="card-actions">' + webBtn + '</div>'
+    + '</div></div>';
+}
+
+function renderFlatGrid(list) {
+  const grid = document.getElementById('cardsGrid');
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><b>Todavía no encontramos un comercio para eso</b>Es una gran oportunidad para invitar a un vecino con ese rubro a sumarse a la Cámara.</div>';
+  } else {
+    grid.innerHTML = list.map(cardHtml).join('');
+  }
+}
+
+// Fila con scroll horizontal (como en Netflix), llamada por rubro. Cada
+// botón de "‹ ›" desplaza esa fila con scrollRow() de más abajo.
+function scrollRow(rowId, dir) {
+  const el = document.getElementById(rowId);
+  if (!el) return;
+  const amount = Math.max(240, el.clientWidth * 0.8) * dir;
+  el.scrollBy({ left: amount, behavior: 'smooth' });
+}
+
+let rowIdCounter = 0;
+function renderRubroRows(list) {
+  const rows = document.getElementById('cardsRows');
+  if (!rows) return;
+  if (list.length === 0) {
+    rows.innerHTML = '<div class="empty-state"><b>Todavía no hay comercios cargados</b>Es una gran oportunidad para invitar a un vecino a sumarse a la Cámara.</div>';
+    return;
+  }
+  const byRubro = new Map();
+  list.forEach(b => {
+    if (!byRubro.has(b.rubro)) byRubro.set(b.rubro, []);
+    byRubro.get(b.rubro).push(b);
+  });
+  // respeta el orden de RUBROS; un rubro cargado a mano que no esté en esa
+  // lista igual aparece, al final, para no perder ningún comercio de vista.
+  const orderedKeys = RUBROS.map(r => r.key).filter(k => byRubro.has(k));
+  byRubro.forEach((_, k) => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+
+  rows.innerHTML = orderedKeys.map(key => {
+    const items = byRubro.get(key);
+    const rowId = 'rubroRow' + (rowIdCounter++);
+    return '<div class="rubro-row">'
+      + '<div class="rubro-row-head">'
+      + '<h3>' + rubroLabel(key) + '<span class="rubro-row-count">' + items.length + '</span></h3>'
+      + '<div class="rubro-row-nav">'
+      + '<button type="button" aria-label="Ver anteriores" onclick="scrollRow(\'' + rowId + '\',-1)">‹</button>'
+      + '<button type="button" aria-label="Ver siguientes" onclick="scrollRow(\'' + rowId + '\',1)">›</button>'
+      + '</div></div>'
+      + '<div class="rubro-row-scroll" id="' + rowId + '">' + items.map(cardHtml).join('') + '</div>'
+      + '</div>';
+  }).join('');
+}
+
 function renderCards(list, q) {
   CURRENT_RESULTS = list;
   const grid = document.getElementById('cardsGrid');
+  const rows = document.getElementById('cardsRows');
   const count = document.getElementById('resultsCount');
   if (!grid) return;
+
+  const rubroSel = document.getElementById('rubroSelect');
+  const rubroFilter = rubroSel ? rubroSel.value : '';
+  // "Navegando" (sin búsqueda ni rubro elegido) muestra filas tipo Netflix,
+  // una por rubro. En cuanto hay una búsqueda o un rubro puntual elegido,
+  // agrupar por rubro ya no suma nada — se muestra la grilla de siempre.
+  const browsing = !q && !rubroFilter;
+
   if (count) {
     if (q) {
       count.textContent = list.length + (list.length === 1 ? ' comercio encontrado para "' : ' comercios encontrados para "') + document.getElementById('searchInput').value + '"';
@@ -403,30 +508,17 @@ function renderCards(list, q) {
       count.textContent = list.length + ' comercios socios de la Cámara';
     }
   }
-  if (list.length === 0) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><b>Todavía no encontramos un comercio para eso</b>Es una gran oportunidad para invitar a un vecino con ese rubro a sumarse a la Cámara.</div>';
+
+  if (browsing && rows) {
+    grid.classList.add('hidden');
+    rows.classList.remove('hidden');
+    renderRubroRows(list);
   } else {
-    grid.innerHTML = list.map((b) => {
-      const accent = ACCENTS[BUSINESSES.indexOf(b) % ACCENTS.length];
-      const webBtn = b.web
-        ? '<a class="btn btn-outline btn-sm" href="https://' + b.web + '" target="_blank" rel="noopener">Ver sitio web</a>'
-        : '<span class="web-pending">Sin sitio web — disponible con Espar Co.</span>';
-      const logoUrl = resolveLogoUrl(b.logo);
-      return '<div class="card">'
-        + '<div class="top" style="background:' + accent + '"></div>'
-        + '<div class="card-body">'
-        + (logoUrl
-            ? '<img class="card-logo" src="' + logoUrl + '" alt="Logo de ' + escapeHtml(b.name) + '" onerror="logoFallback(this,\'' + b.rubro + '\',\'' + accent + '\')">'
-            : '<div class="icon-badge" style="background:' + accent + '">' + iconFor(b.rubro) + '</div>')
-        + '<span class="rubro-tag">' + rubroLabel(b.rubro) + '</span>'
-        + '<h3>' + b.name + '</h3>'
-        + '<p class="desc">' + b.desc + '</p>'
-        + '<div class="meta-line">📍 <a href="' + mapLink(b.addr) + '" target="_blank" rel="noopener">' + b.addr + '</a></div>'
-        + '<div class="meta-line">📞 <a href="' + waLink(b.phone, b.name) + '" target="_blank" rel="noopener">' + b.phone + '</a></div>'
-        + '<div class="card-actions">' + webBtn + '</div>'
-        + '</div></div>';
-    }).join('');
+    if (rows) rows.classList.add('hidden');
+    grid.classList.remove('hidden');
+    renderFlatGrid(list);
   }
+
   // si la vista de mapa está activa, la mantenemos sincronizada con el resultado actual
   const mapView = document.getElementById('mapView');
   if (mapView && !mapView.classList.contains('hidden') && typeof renderMapMarkers === 'function') {
