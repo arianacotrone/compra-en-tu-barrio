@@ -49,7 +49,7 @@ const RUBROS = [
   { key: 'ropa', label: 'Ropa e indumentaria' },
   { key: 'carpinteria', label: 'Carpintería' },
   { key: 'optica', label: 'Oftalmología / Óptica' },
-  { key: 'abogados', label: 'Abogados' },
+  { key: 'Servicios Profesionales', label: 'Servicios Profesionales' },
   { key: 'electricista', label: 'Electricista' },
   { key: 'ferreteria', label: 'Ferretería / Bazar' }
 ];
