@@ -13,6 +13,7 @@ assets/
   style.css              ← todo el diseño
   site.js                ← toda la lógica compartida (buscador, cuentas, farmacias) — se reutiliza en las 3 páginas
   map.js                 ← la capa de mapa de la vidriera digital (ver más abajo)
+  semantic.js            ← búsqueda semántica en el navegador (ver más abajo) — solo se usa en vidriera.html
   img/logo.png           ← logo real de la Cámara
   data/comercios.json    ← el catálogo de comercios (acá se reemplaza por datos reales)
   data/farmacias.json    ← farmacias y su día de turno (acá se reemplaza por el cronograma real)
@@ -66,7 +67,20 @@ El botón "Ingresar / Registrarme" del menú (visible en las tres páginas) abre
 - **Las cuentas se guardan de verdad — pero solo en tu navegador**: al registrarte, tu cuenta (nombre, contacto, y la contraseña ya *hasheada*, nunca en texto plano) se guarda en el `localStorage` del navegador donde estás probando el sitio. Eso significa que podés cerrar la página, volver a abrirla y hacer login con esa cuenta — pero es una base de datos local a ese navegador y esa computadora, **no una base de datos compartida en un servidor**: si entrás desde otro navegador o borrás los datos del sitio, esa cuenta no va a estar. Para una base de datos real y compartida (con recuperación de contraseña, etc.) hace falta un backend — avisame cuando quieran dar ese paso.
 - Al iniciar sesión, el botón de "Ingresar/Registrarme" del menú cambia por un saludo con tu nombre y un botón para salir.
 
-## El buscador tiene procesamiento de lenguaje de verdad
+## El buscador ahora entiende el significado, no solo palabras exactas (assets/semantic.js)
+
+Esto es lo nuevo: además del motor por palabras clave que ya tenías, la vidriera digital ahora carga un modelo de embeddings (`Xenova/paraphrase-multilingual-MiniLM-L12-v2`, una versión del modelo multilingüe MiniLM convertida para correr en el navegador) que entiende el significado de lo que escribís, no solo si la palabra exacta aparece cargada en algún comercio. Por eso ahora buscar "remera" debería encontrar los comercios de ropa aunque la palabra "remera" no esté escrita en ningún tag — cosa que antes no pasaba.
+
+Cómo funciona, en criollo: el modelo convierte tu búsqueda y la descripción de cada comercio en un vector de números que representa su significado, y compara qué tan parecidos son esos vectores. Todo esto corre **en el navegador de quien busca, no en un servidor tuyo**:
+
+- No hace falta backend ni cuenta en la nube ni API key — es la opción que charlamos, la que no te deja atada a mantener nada prendido.
+- El modelo se descarga una sola vez desde la CDN pública de Hugging Face (unos cuantos MB) la primera vez que alguien entra a la vidriera, y el propio navegador lo guarda en caché para las próximas visitas — no ocupa espacio en tu hosting.
+- Mientras se descarga (la primera vez, unos segundos), aparece un aviso chiquito abajo del buscador ("🧠 Preparando el buscador inteligente…"); cuando ya está listo, cambia a "🧠 Búsqueda inteligente activa".
+- **Si el modelo no llega a cargar** (por ejemplo, sin conexión a internet la primera vez que alguien entra, o algún bloqueo de red), el sitio no se rompe: vuelve a usar el motor por palabras clave de siempre (TF-IDF + sinónimos + stemming, descripto abajo) como respaldo automático, sin avisos de error.
+
+**Una aclaración importante sobre cómo se probó esto**: el entorno donde armé este archivo no tiene salida a redes externas, así que no pude descargar el modelo real de Hugging Face para probarlo con búsquedas de verdad. Lo que sí hice fue simular el modelo (con un modelo de prueba que "sabe" que remera es ropa, igual que sabría el modelo real) para confirmar que toda la conexión funciona: se activa, arma los vectores del catálogo, encuentra los comercios correctos y cae de vuelta al buscador por palabras clave si algo falla. Lo que no pude confirmar todavía es el umbral exacto de similitud (la constante `SEMANTIC_SCORE_THRESHOLD` al principio de `assets/site.js`, hoy en `0.42`) — ese número decide qué tan estricto es el corte entre "es un resultado" y "no lo es", y puede necesitar un ajuste fino una vez que lo pruebes con búsquedas reales en el sitio ya publicado. Si ves que trae de más (resultados poco relacionados) o de menos (búsquedas razonables sin resultados), avisame y lo afinamos juntos con ejemplos reales.
+
+## El motor por palabras clave (el respaldo, y lo que corre si el modelo no cargó)
 
 `assets/site.js` implementa, todo en el navegador (sin backend, sin costo por búsqueda, sin API key de por medio):
 
@@ -75,7 +89,7 @@ El botón "Ingresar / Registrarme" del menú (visible en las tres páginas) abre
 - **Expansión por sinónimos**: un mini-tesauro por concepto (por ejemplo "luz", "corte", "tablero", "cortocircuito" y "electricista" cuentan como lo mismo), para que la intención de la búsqueda importe más que la palabra exacta.
 - **TF-IDF + similitud de coseno**: la técnica clásica de los motores de búsqueda de toda la vida — le da más peso a las palabras distintivas de cada comercio y rankea los resultados por qué tan parecidos son a la consulta.
 
-Es una técnica de procesamiento de lenguaje real (no inventa respuestas ni usa una IA generativa por detrás), pensada para funcionar bien en un catálogo de este tamaño sin depender de ningún servicio externo. Si en algún momento querés upgradearlo a búsqueda semántica con un modelo de lenguaje (tipo IA generativa), eso ya requiere un backend propio para no exponer una API key en el navegador — avisame cuando llegue ese momento y lo armamos.
+Es una técnica de procesamiento de lenguaje real (no inventa respuestas), pero depende de que la palabra ya esté cargada en algún tag o en el mini-tesauro — por eso "remera" sola no encontraba nada antes de agregar la búsqueda semántica de arriba. Sigue siendo útil como respaldo, y es instantánea (no depende de que ningún modelo termine de cargar).
 
 ## El catálogo tiene 30 comercios de ejemplo (3 por rubro)
 
@@ -84,6 +98,7 @@ Es una técnica de procesamiento de lenguaje real (no inventa respuestas ni usa 
 ## Lo que sigue siendo maqueta (no real todavía)
 
 - Las cuentas de vecino/comerciante se guardan en el navegador (localStorage), no en una base de datos compartida real — ver la sección de arriba.
+- El umbral de la búsqueda semántica (`SEMANTIC_SCORE_THRESHOLD` en `assets/site.js`) se probó de forma estructural, no con el modelo real (ver la sección de arriba) — puede necesitar un ajuste una vez que lo pruebes en el sitio publicado.
 - La cuota societaria se menciona sin monto.
 - El mapa usa OpenStreetMap en lugar de Google Maps (falta la API key de Google) y las ubicaciones de los comercios son ilustrativas, no geocodificación real.
 - Las farmacias de turno son 7 farmacias ficticias con una rotación semanal de ejemplo, no el cronograma real del Colegio de Farmacéuticos.
