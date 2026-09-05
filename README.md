@@ -1,29 +1,55 @@
-# Calzada Compra — archivos para subir al dominio
+# Calzada Compra — sitio completo para subir al dominio
 
-Este ZIP tiene todo lo necesario para publicar el prototipo en tu hosting. Es un sitio de una sola página, sin backend: no necesita Node, PHP ni base de datos.
+Versión con archivos separados (HTML/CSS/JS/datos/imágenes), lista para editar y para subir a hosting.
 
-## Qué hay acá
+## Estructura
 
-- **`index.html`** — el sitio completo. Todo el CSS y el JS están adentro del mismo archivo (incluido el logo, como imagen embebida), así que es el único archivo que realmente hace falta.
-- **`favicon.ico`** — el ícono de pestaña del navegador, generado a partir del logo de la Cámara.
-- **`README.md`** — este archivo.
+```
+index.html
+favicon.ico
+assets/
+  style.css              ← todo el diseño
+  site.js                ← toda la lógica (render, modal y el buscador)
+  img/logo.png           ← logo real de la Cámara
+  data/comercios.json    ← el catálogo de comercios (acá se reemplaza por datos reales)
+```
 
 ## Cómo subirlo
 
-1. Entrá al panel de tu hosting (cPanel, Plesk, FTP — lo que uses para esparco.com.ar/faryco.com.ar).
-2. Andá a la carpeta raíz del dominio o subdominio donde quieras publicarlo (normalmente `public_html/` o la carpeta del subdominio si lo colgás de algo como `calzadacompra.esparco.com.ar` o un dominio propio de la Cámara).
-3. Subí `index.html` y `favicon.ico` a esa carpeta.
-4. Listo — al entrar al dominio ya debería cargar la home.
+1. Subí **toda la carpeta** (`index.html`, `favicon.ico` y la carpeta `assets/` completa, con su estructura interna) a la raíz de tu dominio o subdominio — por FTP o por el administrador de archivos de tu hosting (cPanel, Plesk, GitHub Pages, etc.), igual que hiciste con esparco.com.ar o faryco.com.ar.
+2. No hace falta Node, PHP ni base de datos — es un sitio 100% estático.
 
-Si preferís GitHub Pages (como hiciste con `arianacotrone.github.io/EJEC`): creá el repo, subí estos dos archivos a la raíz, activá Pages apuntando a la rama principal, y si vas a usar un dominio propio agregá el archivo `CNAME` con ese dominio.
+## Importante: para probarlo en tu computadora, corré un servidor local
 
-## Importante: esto todavía es un prototipo de demostración
+`index.html` ahora carga el catálogo de comercios con `fetch()` desde `assets/data/comercios.json`. Eso funciona perfecto una vez subido al hosting (o en GitHub Pages), pero **si abrís `index.html` con doble clic desde tu computadora, el navegador va a bloquear esa carga por seguridad (CORS)** y vas a ver un aviso de "no pudimos cargar el catálogo".
 
-Antes de mostrarlo como el sitio "real" de la Cámara, tené en cuenta que:
+Para probarlo local, desde la carpeta del proyecto corré:
 
-- **Los 10 comercios de la vidriera son ficticios** (nombres, direcciones y teléfonos inventados para cubrir los rubros pedidos). Hay que reemplazarlos por los comercios socios reales — lo más prolijo sería que me pases el Excel real y te genero el HTML actualizado, en vez de editarlo a mano.
-- **El formulario de registro (vecino/comerciante) no guarda datos.** Es una maqueta del flujo: al enviarlo muestra una pantalla de confirmación, pero no hay backend ni base de datos detrás todavía.
-- **La cuota societaria se menciona pero sin monto** — quedó como texto genérico hasta que definan el valor con la Cámara.
-- El buscador en lenguaje natural funciona con un diccionario de palabras clave hecho a mano sobre estos 10 comercios de ejemplo — con más comercios reales conviene revisar que las palabras clave de cada uno sigan siendo representativas.
+```bash
+python3 -m http.server 8000
+```
 
-Cuando quieras avanzar a la siguiente etapa (comercios reales, registro con base de datos, tabla comparativa de productos), avisame y seguimos desde acá.
+y abrí `http://localhost:8000` en el navegador. Ahí sí va a cargar todo.
+
+## El buscador ahora tiene procesamiento de lenguaje de verdad
+
+Antes era un diccionario de palabras clave escrito a mano. Ahora `assets/site.js` implementa, todo en el navegador (sin backend, sin costo por búsqueda, sin API key de por medio):
+
+- **Normalización y stopwords**: saca acentos, mayúsculas y palabras vacías ("de", "para", "un", etc.).
+- **Stemming en español**: un stemmer liviano de sufijos, para que "anteojos"/"anteojo", "electricista"/"electricidad" o "carnicería"/"carnicero" se traten como la misma raíz sin necesitar un diccionario enorme.
+- **Expansión por sinónimos**: un mini-tesauro por concepto (por ejemplo "luz", "corte", "tablero", "cortocircuito" y "electricista" cuentan como lo mismo), para que la intención de la búsqueda importe más que la palabra exacta.
+- **TF-IDF + similitud de coseno**: la técnica clásica de los motores de búsqueda de toda la vida — le da más peso a las palabras distintivas de cada comercio y rankea los resultados por qué tan parecidos son a la consulta.
+
+Es una técnica de procesamiento de lenguaje real (no inventa respuestas ni usa una IA generativa por detrás), pensada para funcionar bien en un catálogo de este tamaño sin depender de ningún servicio externo. Si en algún momento querés upgradearlo a búsqueda semántica con un modelo de lenguaje (tipo IA generativa), eso ya requiere un backend propio para no exponer una API key en el navegador — avisame cuando llegue ese momento y lo armamos.
+
+## El catálogo ahora tiene 30 comercios de ejemplo (3 por rubro)
+
+`assets/data/comercios.json` tiene 3 comercios ficticios por cada uno de los 10 rubros (minorista, mayorista, retacería, carnicería, ropa, carpintería, óptica/oftalmología, abogados, electricista, ferretería/bazar). Para reemplazarlos por los comercios reales de la Cámara, lo más prolijo es que me pases el Excel real y te regenero este archivo — mantiene la misma estructura (nombre, rubro, descripción, dirección, teléfono, sitio web y tags de búsqueda) así el buscador sigue funcionando igual de bien.
+
+## Lo que sigue siendo maqueta (no real todavía)
+
+- El formulario de registro (vecino/comerciante) no guarda datos — muestra una confirmación pero no hay base de datos detrás.
+- La cuota societaria se menciona sin monto.
+- La tabla comparativa de productos (sección "Fase 2") tiene datos de ejemplo.
+
+Cuando quieras avanzar con datos reales, registro con base de datos o la tabla comparativa, seguimos desde acá.
