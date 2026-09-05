@@ -39,6 +39,10 @@ const ICONS = {
 
 const ACCENTS = ['#15335c', '#c98a1e', '#2f5488', '#eea52a', '#5c6773', '#0b2038', '#8a6a2c', '#3d6d9e'];
 
+// se exponen en window para que assets/semantic.js (un módulo aparte) pueda
+// armar el mismo texto por comercio que usa el motor de palabras clave
+window.RUBROS = RUBROS;
+
 const SUGGESTIONS = [
   'se me cortó la luz', 'carne para el asado', 'un regalo para mi mamá', 'anteojos nuevos',
   'ropa de invierno', 'mueble a medida', 'un juicio de tránsito', 'comprar por mayor'
@@ -232,24 +236,56 @@ function clearSearch() {
   renderCards(BUSINESSES);
 }
 
-function runSearch() {
+// Umbral de corte para el motor semántico (similitud de coseno entre
+// embeddings). Es distinto al umbral del motor de palabras clave (0.05,
+// más abajo) porque las dos técnicas puntúan en escalas distintas. Este
+// valor se probó de forma estructural (con un modelo de prueba) porque
+// el entorno de desarrollo no tiene salida a internet para descargar el
+// modelo real de Hugging Face — conviene afinarlo con búsquedas reales
+// una vez el sitio esté publicado, subiendo o bajando este número si
+// trae de más o de menos.
+const SEMANTIC_SCORE_THRESHOLD = 0.42;
+
+let searchRequestId = 0;
+
+async function runSearch() {
   const rawQuery = document.getElementById('searchInput').value.trim();
   const rubroFilter = document.getElementById('rubroSelect').value;
+  const requestId = ++searchRequestId; // evita pisar resultados si llegan búsquedas fuera de orden
   let list = BUSINESSES.slice();
 
   if (rawQuery) {
-    const stems = stemmedTokens(rawQuery);
-    const queryWeights = expandQueryTerms(stems);
-    const cosine = cosineScore(queryWeights);
-    const normQuery = norm(rawQuery);
+    let scored = null;
+    let usedSemantic = false;
 
-    list = BUSINESSES
-      .map((b, i) => {
-        // pequeño refuerzo por coincidencia literal exacta (además del TF-IDF)
-        const literalBonus = (b.tags || []).some(t => norm(t) === normQuery || normQuery.includes(norm(t))) ? 0.2 : 0;
-        return { b, score: cosine[i] + literalBonus };
+    if (window.Semantic) {
+      const semScores = await window.Semantic.semanticScores(rawQuery);
+      if (requestId !== searchRequestId) return; // el usuario ya escribió otra cosa mientras esperábamos
+      if (semScores) {
+        scored = BUSINESSES.map((b, i) => ({ b, score: semScores[i] }));
+        usedSemantic = true;
+      }
+    }
+
+    if (!scored) {
+      // respaldo: el motor de palabras clave (TF-IDF + sinónimos) de siempre
+      const stems = stemmedTokens(rawQuery);
+      const queryWeights = expandQueryTerms(stems);
+      const cosine = cosineScore(queryWeights);
+      scored = BUSINESSES.map((b, i) => ({ b, score: cosine[i] }));
+    }
+
+    const normQuery = norm(rawQuery);
+    const threshold = usedSemantic ? SEMANTIC_SCORE_THRESHOLD : 0.05;
+    const bonusWeight = usedSemantic ? 0.06 : 0.2; // el refuerzo literal pesa menos si ya hay semántica
+
+    list = scored
+      .map(({ b, score }) => {
+        // pequeño refuerzo por coincidencia literal exacta (además del puntaje principal)
+        const literalBonus = (b.tags || []).some(t => norm(t) === normQuery || normQuery.includes(norm(t))) ? bonusWeight : 0;
+        return { b, score: score + literalBonus };
       })
-      .filter(x => x.score > 0.05)
+      .filter(x => x.score > threshold)
       .sort((a, b2) => b2.score - a.score)
       .map(x => x.b);
   }
@@ -615,6 +651,8 @@ async function loadBusinesses() {
     const res = await fetch('assets/data/comercios.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     BUSINESSES = await res.json();
+    window.BUSINESSES = BUSINESSES; // visible para assets/semantic.js (es un módulo aparte)
+    window.dispatchEvent(new Event('calzada:businesses-loaded'));
     return true;
   } catch (err) {
     console.error('Error cargando comercios.json:', err);
@@ -622,10 +660,28 @@ async function loadBusinesses() {
   }
 }
 
+// Estado del motor de búsqueda semántico, para mostrarlo en la vidriera
+// (assets/semantic.js dispara este evento; si ese archivo no está en la
+// página — por ejemplo en index.html o farmacias.html — esto no hace nada).
+function wireSemanticStatus() {
+  const el = document.getElementById('searchEngineStatus');
+  if (!el) return;
+  window.addEventListener('calzada:semantic-status', (e) => {
+    const messages = {
+      loading: '🧠 Preparando el buscador inteligente… puede tardar unos segundos la primera vez.',
+      ready: '🧠 Búsqueda inteligente activa: entiende el significado, no solo palabras exactas.',
+      unavailable: '' // se usa el motor por palabras clave sin avisar — sigue funcionando igual
+    };
+    el.className = 'search-engine-status' + (e.detail === 'ready' ? ' ready' : '');
+    el.textContent = messages[e.detail] || '';
+  });
+}
+
 async function init() {
   renderNavActions();
   wirePasswordFields();
   populateSelects();
+  wireSemanticStatus();
 
   const grid = document.getElementById('cardsGrid');
   if (grid) {

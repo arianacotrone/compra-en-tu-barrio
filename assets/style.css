@@ -140,6 +140,8 @@ section{padding:84px 0;}
   font-size:.82rem;color:var(--navy-deep);font-weight:600;
 }
 .chips button:hover{background:var(--gold);border-color:var(--gold);}
+.search-engine-status{font-size:.76rem;margin-top:12px;min-height:1.1em;color:var(--gray-dark);}
+.search-engine-status.ready{color:#2f8f5b;font-weight:700;}
 .results-meta{display:flex;justify-content:space-between;align-items:center;margin:26px 0 16px;flex-wrap:wrap;gap:10px;}
 .results-meta span{color:var(--gray-dark);font-size:.9rem;}
 .results-meta .clear-btn{background:none;border:none;color:var(--navy-light);font-weight:700;font-size:.85rem;text-decoration:underline;}
