@@ -156,6 +156,9 @@ section{padding:84px 0;}
 .card .icon-badge{
   width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;
 }
+.card .card-logo{
+  width:52px;height:52px;border-radius:14px;object-fit:cover;border:1px solid var(--line);background:var(--cream);
+}
 .card h3{margin:2px 0 0;font-size:1.05rem;font-family:'Inter';font-weight:800;color:var(--navy-deep);}
 .card .rubro-tag{
   align-self:flex-start;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;

@@ -73,12 +73,16 @@ function setStatus(status) {
   window.dispatchEvent(new CustomEvent('calzada:semantic-status', { detail: status }));
 }
 
-async function ensureReady() {
-  if (catalogEmbeddings) return true;
+// Dispara (o continúa) la carga del modelo en segundo plano. A propósito
+// NO se espera desde acá con un límite de tiempo: esta promesa vive todo
+// lo que tarde la descarga real, pero nadie más que quiera usar el motor
+// semántico debería quedarse esperándola indefinidamente — para eso está
+// semanticScores(), que sí pone un límite.
+function startLoading() {
   if (loadingPromise) return loadingPromise;
 
+  setStatus('loading');
   loadingPromise = (async () => {
-    setStatus('loading');
     extractor = await pipeline('feature-extraction', MODEL_NAME);
 
     const businesses = window.BUSINESSES || [];
@@ -92,18 +96,42 @@ async function ensureReady() {
   })().catch(err => {
     console.warn('No se pudo cargar el buscador semántico — se usa el buscador por palabras clave como respaldo.', err);
     setStatus('unavailable');
-    loadingPromise = null;
     return false;
   });
 
   return loadingPromise;
 }
 
-async function semanticScores(query) {
-  const ok = await ensureReady();
-  if (!ok || !catalogEmbeddings) return null;
-  const qVec = await embed(query);
-  return catalogEmbeddings.map(v => cosineSim(qVec, v));
+// Se mantiene por compatibilidad (y para el precalentamiento de más abajo):
+// "está listo" ahora significa "arrancó a cargar", no "hay que esperarlo".
+async function ensureReady() {
+  return startLoading();
+}
+
+// Calcula la similitud semántica de una consulta contra el catálogo.
+// Nunca deja a quien busca esperando más de `timeoutMs`: si el modelo
+// todavía no terminó de cargar (puede tardar bastante la primera vez,
+// según la conexión), devuelve null enseguida para que site.js use el
+// buscador por palabras clave en esa búsqueda puntual — la carga del
+// modelo sigue en segundo plano y la próxima búsqueda ya la aprovecha.
+async function semanticScores(query, timeoutMs = 8000) {
+  if (catalogEmbeddings) {
+    const qVec = await embed(query);
+    return catalogEmbeddings.map(v => cosineSim(qVec, v));
+  }
+
+  startLoading(); // no se espera sin límite: solo se deja progresando
+
+  const outcome = await Promise.race([
+    loadingPromise,
+    new Promise(resolve => setTimeout(() => resolve('timeout'), timeoutMs))
+  ]);
+
+  if (outcome === true && catalogEmbeddings) {
+    const qVec = await embed(query);
+    return catalogEmbeddings.map(v => cosineSim(qVec, v));
+  }
+  return null; // todavía cargando (o falló): que se use el respaldo por palabras clave
 }
 
 window.Semantic = {

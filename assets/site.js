@@ -11,6 +11,36 @@
    de las tres páginas sin generar errores.
    ========================================================= */
 
+/* ============================================================
+   0) FUENTE DE DATOS: local (por defecto) o Google Sheets
+   ---------------------------------------------------------
+   Por defecto el catálogo de comercios y las farmacias de turno se leen
+   de assets/data/comercios.json y assets/data/farmacias.json (los
+   archivos que vienen con el sitio).
+
+   Si preferís cargarlos y editarlos desde Google Drive, pegá acá abajo
+   las URLs de dos hojas de Google Sheets publicadas como CSV, y el sitio
+   va a leer los datos desde ahí. Para conseguir esa URL: con la hoja
+   abierta, Archivo > Compartir > "Publicar en la web" > elegís la hoja
+   correspondiente y el formato CSV > Publicar. Google te da un link que
+   termina en "output=csv" — ese es el que va acá.
+
+   Importante: esto tiene que ser específicamente una hoja de Sheets
+   "publicada en la web", no un archivo CSV suelto subido a una carpeta
+   de Drive (aunque esté compartido como "cualquiera con el link puede
+   ver"). Un archivo de Drive no le permite a una página de otro dominio
+   leer su contenido (el navegador lo bloquea por seguridad, vía CORS);
+   una hoja de Sheets publicada sí está pensada para eso.
+
+   El formato de columnas esperado es el mismo que el de los CSV que te
+   pasé (comercios.csv y farmacias.csv) — abrilos con Sheets, completá
+   los datos reales ahí, y cuando quieras probarlos pegá la URL acá.
+   ============================================================ */
+const SHEETS_CONFIG = {
+  comerciosCsvUrl: '', // ej: 'https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=0&single=true&output=csv'
+  farmaciasCsvUrl: ''
+};
+
 const RUBROS = [
   { key: 'minorista', label: 'Minorista / Almacén' },
   { key: 'mayorista', label: 'Mayorista' },
@@ -110,15 +140,18 @@ function stemmedTokens(text) {
    ============================================================ */
 const SYNONYM_GROUPS_RAW = [
   ['luz', 'corte', 'cortocircuito', 'electricidad', 'instalacion electrica', 'tablero', 'enchufe', 'electricista'],
-  ['carne', 'asado', 'milanesa', 'achuras', 'vacio', 'parrilla', 'pollo', 'cerdo', 'carniceria'],
-  ['anteojos', 'lentes', 'vista', 'optica', 'armazon', 'oftalmologo', 'ojos'],
-  ['abogado', 'abogada', 'legal', 'multa', 'juicio', 'divorcio', 'herencia', 'sucesion', 'tramite', 'derecho'],
-  ['mueble', 'madera', 'placard', 'carpintero', 'carpinteria', 'melamina', 'ebanisteria'],
+  ['carne', 'asado', 'milanesa', 'achuras', 'vacio', 'parrilla', 'pollo', 'cerdo', 'carniceria', 'bife', 'chorizo', 'matambre', 'chinchulin', 'asadora'],
+  ['anteojos', 'lentes', 'lentes de sol', 'gafas', 'vista', 'optica', 'armazon', 'oftalmologo', 'ojos'],
+  ['abogado', 'abogada', 'legal', 'multa', 'juicio', 'divorcio', 'herencia', 'sucesion', 'tramite', 'derecho', 'demanda', 'denuncia'],
+  ['mueble', 'madera', 'placard', 'carpintero', 'carpinteria', 'melamina', 'ebanisteria', 'ropero', 'sillon', 'mesada', 'silla', 'mesa'],
   ['tela', 'costura', 'retazo', 'merceria', 'hilo', 'tapiceria', 'cortina'],
   ['mayorista', 'distribuidora', 'por mayor', 'reventa', 'mayoreo'],
-  ['ropa', 'indumentaria', 'vestimenta', 'moda', 'vestido', 'talles', 'uniforme', 'guardapolvo'],
-  ['ferreteria', 'herramienta', 'tornillo', 'bazar', 'pintura', 'cerrajeria'],
-  ['almacen', 'kiosco', 'despensa', 'autoservicio', 'fiambre', 'golosinas', 'verduleria'],
+  ['ropa', 'indumentaria', 'vestimenta', 'moda', 'vestido', 'talles', 'uniforme', 'guardapolvo',
+   'remera', 'remeras', 'buzo', 'buzos', 'pantalon', 'pantalones', 'campera', 'camperas',
+   'zapatillas', 'calzado', 'pollera', 'polleras', 'short', 'shorts', 'medias', 'gorra',
+   'ropa interior', 'sweater', 'chaleco', 'jean', 'jeans'],
+  ['ferreteria', 'herramienta', 'tornillo', 'bazar', 'pintura', 'cerrajeria', 'candado', 'cerradura', 'llave', 'tuerca', 'destornillador', 'martillo'],
+  ['almacen', 'kiosco', 'despensa', 'autoservicio', 'fiambre', 'golosinas', 'verduleria', 'gaseosa', 'snack'],
   ['regalo', 'regaleria', 'obsequio']
 ];
 // pre-stemizamos cada grupo una sola vez
@@ -210,6 +243,17 @@ function rubroLabel(key) {
 }
 function iconFor(key) { return ICONS[key] || ICONS.minorista; }
 
+// Si el logo de un comercio no carga (ruta rota, archivo que todavía no
+// se subió, etc.), lo reemplazamos por el mismo ícono genérico de rubro
+// que se usaba antes de tener logos — así ninguna tarjeta queda rota.
+function logoFallback(imgEl, rubro, accent) {
+  const div = document.createElement('div');
+  div.className = 'icon-badge';
+  div.style.background = accent;
+  div.innerHTML = iconFor(rubro);
+  imgEl.replaceWith(div);
+}
+
 function populateSelects() {
   const sel = document.getElementById('rubroSelect');
   if (sel) {
@@ -237,14 +281,18 @@ function clearSearch() {
 }
 
 // Umbral de corte para el motor semántico (similitud de coseno entre
-// embeddings). Es distinto al umbral del motor de palabras clave (0.05,
-// más abajo) porque las dos técnicas puntúan en escalas distintas. Este
-// valor se probó de forma estructural (con un modelo de prueba) porque
-// el entorno de desarrollo no tiene salida a internet para descargar el
-// modelo real de Hugging Face — conviene afinarlo con búsquedas reales
-// una vez el sitio esté publicado, subiendo o bajando este número si
-// trae de más o de menos.
-const SEMANTIC_SCORE_THRESHOLD = 0.42;
+// embeddings). Lo subimos bastante (0.6) a propósito: una prueba real con
+// el modelo verdadero mostró que, para palabras sueltas y fuera de
+// contexto, puede dar puntajes altos a comercios que no tienen nada que
+// ver (ej: "buzo" encontrando una carnicería). Como el motor semántico
+// ahora es un REFUERZO sobre el buscador por palabras clave (no lo
+// reemplaza — ver runSearch), un umbral más exigente reduce esos falsos
+// positivos sin perder lo bueno: si el modelo está realmente seguro, igual
+// pasa; si está dudando, gana el buscador por palabras clave. Este
+// número se probó de forma estructural (con un modelo de prueba), no con
+// puntajes reales — si ves resultados raros, subilo más; si ves que le
+// cuesta encontrar cosas obvias, bajalo un poco.
+const SEMANTIC_SCORE_THRESHOLD = 0.6;
 
 let searchRequestId = 0;
 
@@ -255,39 +303,47 @@ async function runSearch() {
   let list = BUSINESSES.slice();
 
   if (rawQuery) {
-    let scored = null;
-    let usedSemantic = false;
+    // el motor por palabras clave (TF-IDF + sinónimos) se calcula siempre:
+    // es instantáneo y es la base confiable de la búsqueda
+    const stems = stemmedTokens(rawQuery);
+    const queryWeights = expandQueryTerms(stems);
+    const keywordScores = cosineScore(queryWeights);
 
+    // el motor semántico es un REFUERZO opcional: si está listo, suma
+    // comercios que el buscador por palabras clave se perdió, pero no le
+    // saca a ningún resultado que el buscador por palabras clave ya
+    // encontró (así un mal puntaje semántico aislado no puede tapar un
+    // resultado bueno ni imponerse solo con un puntaje dudoso)
+    let semScores = null;
     if (window.Semantic) {
-      const semScores = await window.Semantic.semanticScores(rawQuery);
+      semScores = await window.Semantic.semanticScores(rawQuery);
       if (requestId !== searchRequestId) return; // el usuario ya escribió otra cosa mientras esperábamos
-      if (semScores) {
-        scored = BUSINESSES.map((b, i) => ({ b, score: semScores[i] }));
-        usedSemantic = true;
-      }
-    }
-
-    if (!scored) {
-      // respaldo: el motor de palabras clave (TF-IDF + sinónimos) de siempre
-      const stems = stemmedTokens(rawQuery);
-      const queryWeights = expandQueryTerms(stems);
-      const cosine = cosineScore(queryWeights);
-      scored = BUSINESSES.map((b, i) => ({ b, score: cosine[i] }));
     }
 
     const normQuery = norm(rawQuery);
-    const threshold = usedSemantic ? SEMANTIC_SCORE_THRESHOLD : 0.05;
-    const bonusWeight = usedSemantic ? 0.06 : 0.2; // el refuerzo literal pesa menos si ya hay semántica
 
-    list = scored
-      .map(({ b, score }) => {
-        // pequeño refuerzo por coincidencia literal exacta (además del puntaje principal)
-        const literalBonus = (b.tags || []).some(t => norm(t) === normQuery || normQuery.includes(norm(t))) ? bonusWeight : 0;
-        return { b, score: score + literalBonus };
+    list = BUSINESSES
+      .map((b, i) => {
+        const literalBonus = (b.tags || []).some(t => norm(t) === normQuery || normQuery.includes(norm(t))) ? 0.2 : 0;
+        const keywordScore = keywordScores[i] + literalBonus;
+        const semanticScore = semScores ? semScores[i] : 0;
+        const passesKeyword = keywordScore > 0.05;
+        const passesSemantic = semanticScore > SEMANTIC_SCORE_THRESHOLD;
+        return { b, score: Math.max(keywordScore, passesSemantic ? semanticScore : 0), passes: passesKeyword || passesSemantic };
       })
-      .filter(x => x.score > threshold)
+      .filter(x => x.passes)
       .sort((a, b2) => b2.score - a.score)
       .map(x => x.b);
+
+    if (semScores && window.console && console.debug) {
+      // ayuda para calibrar el umbral con búsquedas reales: podés abrir la
+      // consola del navegador (F12), buscar algo y ver los puntajes acá
+      const top = BUSINESSES
+        .map((b, i) => ({ comercio: b.name, semantico: +semScores[i].toFixed(3) }))
+        .sort((a, c) => c.semantico - a.semantico)
+        .slice(0, 5);
+      console.debug('Puntajes semánticos más altos para "' + rawQuery + '" (umbral actual: ' + SEMANTIC_SCORE_THRESHOLD + '):', top);
+    }
   }
   if (rubroFilter) list = list.filter(b => b.rubro === rubroFilter);
   renderCards(list, rawQuery);
@@ -324,7 +380,9 @@ function renderCards(list, q) {
       return '<div class="card">'
         + '<div class="top" style="background:' + accent + '"></div>'
         + '<div class="card-body">'
-        + '<div class="icon-badge" style="background:' + accent + '">' + iconFor(b.rubro) + '</div>'
+        + (b.logo
+            ? '<img class="card-logo" src="' + b.logo + '" alt="Logo de ' + escapeHtml(b.name) + '" onerror="logoFallback(this,\'' + b.rubro + '\',\'' + accent + '\')">'
+            : '<div class="icon-badge" style="background:' + accent + '">' + iconFor(b.rubro) + '</div>')
         + '<span class="rubro-tag">' + rubroLabel(b.rubro) + '</span>'
         + '<h3>' + b.name + '</h3>'
         + '<p class="desc">' + b.desc + '</p>'
@@ -600,6 +658,18 @@ function switchTab(tab) {
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 async function loadFarmacias() {
+  if (SHEETS_CONFIG.farmaciasCsvUrl) {
+    try {
+      const res = await fetch(SHEETS_CONFIG.farmaciasCsvUrl);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const parsed = farmaciasFromCsvObjects(csvToObjects(await res.text()));
+      if (!parsed.length) throw new Error('la hoja no tiene filas válidas (revisá la columna dia_de_turno: domingo, lunes, martes...)');
+      FARMACIAS = parsed;
+      return true;
+    } catch (err) {
+      console.warn('No se pudo leer las farmacias desde Google Sheets — se usa assets/data/farmacias.json como respaldo.', err);
+    }
+  }
   try {
     const res = await fetch('assets/data/farmacias.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -646,7 +716,98 @@ function renderFarmacias() {
 /* ============================================================
    7) CARGA DE DATOS E INICIO
    ============================================================ */
+
+// Parser de CSV chico (soporta campos entre comillas con comas o saltos
+// de línea adentro, y comillas escapadas como ""). Alcanza para lo que
+// exporta Google Sheets — no es para archivos CSV raros/no estándar.
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field); field = '';
+    } else if (c === '\r') {
+      // se ignora: el \n que sigue cierra la fila
+    } else if (c === '\n') {
+      row.push(field); rows.push(row); row = []; field = '';
+    } else {
+      field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => !(r.length === 1 && r[0].trim() === ''));
+}
+
+// Convierte las filas del CSV en objetos {columna: valor}, usando la
+// primera fila como encabezado (nombre, rubro, descripcion, etc. — los
+// mismos nombres de columna que trae comercios.csv/farmacias.csv).
+function csvToObjects(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (r[i] !== undefined ? r[i] : '').trim(); });
+    return obj;
+  });
+}
+
+function comerciosFromCsvObjects(objs) {
+  return objs.filter(o => o.nombre).map(o => ({
+    name: o.nombre,
+    rubro: o.rubro,
+    desc: o.descripcion,
+    addr: o.direccion,
+    phone: o.telefono,
+    web: o.sitio_web ? o.sitio_web : null,
+    logo: o.logo ? o.logo : null,
+    tags: o.tags ? o.tags.split(/;\s*/).filter(Boolean) : []
+  }));
+}
+
+function dayNameToIndex(name) {
+  const n = norm(name || '');
+  return DIAS_SEMANA.findIndex(d => norm(d) === n);
+}
+
+function farmaciasFromCsvObjects(objs) {
+  return objs
+    .filter(o => o.nombre)
+    .map(o => {
+      let turnoDia = o.dia_de_turno ? dayNameToIndex(o.dia_de_turno) : -1;
+      if (turnoDia < 0 && o.turno_dia !== undefined && o.turno_dia !== '') turnoDia = parseInt(o.turno_dia, 10);
+      return { name: o.nombre, addr: o.direccion, phone: o.telefono, turnoDia };
+    })
+    .filter(f => Number.isInteger(f.turnoDia) && f.turnoDia >= 0 && f.turnoDia <= 6);
+}
+
 async function loadBusinesses() {
+  if (SHEETS_CONFIG.comerciosCsvUrl) {
+    try {
+      const res = await fetch(SHEETS_CONFIG.comerciosCsvUrl);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const parsed = comerciosFromCsvObjects(csvToObjects(await res.text()));
+      if (!parsed.length) throw new Error('la hoja no tiene filas con al menos la columna "nombre" cargada');
+      BUSINESSES = parsed;
+      window.BUSINESSES = BUSINESSES;
+      window.dispatchEvent(new Event('calzada:businesses-loaded'));
+      return true;
+    } catch (err) {
+      console.warn('No se pudo leer el catálogo de comercios desde Google Sheets — se usa assets/data/comercios.json como respaldo.', err);
+    }
+  }
   try {
     const res = await fetch('assets/data/comercios.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
