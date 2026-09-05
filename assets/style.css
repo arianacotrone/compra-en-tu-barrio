@@ -238,6 +238,83 @@ footer{background:var(--navy-deep);color:#c7d2e3;padding:44px 0 26px;font-size:.
 .pane{display:none;}
 .pane.active{display:block;}
 
+.hidden{display:none !important;}
+
+/* NAV — sesión iniciada */
+.nav-user{display:flex;align-items:center;gap:12px;font-size:.86rem;font-weight:700;color:var(--navy-deep);}
+
+/* PASSWORD CHECKLIST + ERRORES DE FORMULARIO */
+.pw-checklist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;}
+.pw-checklist li{font-size:.76rem;color:var(--gray-dark);padding-left:20px;position:relative;}
+.pw-checklist li::before{
+  content:"○";position:absolute;left:0;top:0;color:var(--gray);font-size:.76rem;
+}
+.pw-checklist li.ok{color:var(--navy-deep);font-weight:600;}
+.pw-checklist li.ok::before{content:"✓";color:#2f8f5b;font-weight:700;}
+.field-error{
+  display:none;font-size:.8rem;font-weight:700;color:#b23b3b;background:#fbeceb;
+  border:1px solid #f0c9c7;border-radius:10px;padding:9px 12px;margin:2px 0 12px;
+}
+.field-error.show{display:block;}
+.modal-link{color:var(--navy-light);font-weight:700;text-decoration:underline;}
+
+/* SUBPÁGINAS — encabezado simple */
+.page-hero{
+  background:linear-gradient(160deg,var(--navy-deep) 0%,var(--navy) 100%);
+  color:#fff;padding:44px 0 50px;
+}
+.page-hero .breadcrumb{font-size:.78rem;color:#c7d2e3;margin-bottom:14px;}
+.page-hero .breadcrumb a{text-decoration:none;color:#c7d2e3;font-weight:600;}
+.page-hero .breadcrumb a:hover{color:#fff;}
+.page-hero .eyebrow{color:var(--gold);}
+.page-hero h1{font-size:clamp(1.7rem,3.6vw,2.5rem);margin:10px 0 12px;line-height:1.22;}
+.page-hero p.lead{color:#dfe6f2;max-width:640px;margin:0;font-size:1.02rem;}
+
+/* VISTA TARJETAS / MAPA */
+.results-meta-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.view-toggle{display:flex;background:var(--cream-2);border:1px solid var(--line);border-radius:999px;padding:4px;}
+.view-toggle button{
+  background:none;border:none;border-radius:999px;padding:8px 14px;font-size:.82rem;font-weight:700;color:var(--gray-dark);
+}
+.view-toggle button.active{background:var(--navy);color:#fff;}
+#mapView{
+  height:520px;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+  margin-top:4px;background:var(--cream-2);
+}
+#mapView .leaflet-popup-content{font-family:'Inter',sans-serif;font-size:.86rem;line-height:1.5;}
+#mapView .leaflet-popup-content b{color:var(--navy-deep);}
+
+/* FARMACIAS DE TURNO */
+.turno-loading{
+  text-align:center;padding:40px 20px;color:var(--gray-dark);
+  background:var(--white);border:1px dashed var(--line);border-radius:18px;
+}
+.turno-card{
+  background:linear-gradient(160deg,var(--navy-deep),var(--navy));color:#fff;
+  border-radius:22px;padding:36px;text-align:center;
+}
+.turno-badge{
+  display:inline-block;background:var(--gold);color:var(--navy-deep);font-weight:800;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.08em;padding:6px 14px;border-radius:999px;margin-bottom:16px;
+}
+.turno-card h3{color:#fff;font-size:1.5rem;margin:0 0 14px;}
+.turno-card .meta-line{justify-content:center;color:#dfe6f2;font-size:.92rem;margin-top:6px;}
+.turno-card .meta-line a{color:#fff;font-weight:700;}
+.farmacia-list{display:flex;flex-direction:column;gap:10px;margin-top:22px;}
+.farmacia-row{
+  display:flex;align-items:center;gap:16px;background:var(--white);border:1px solid var(--line);
+  border-radius:14px;padding:14px 18px;
+}
+.farmacia-row.is-today{border-color:var(--gold);background:var(--cream-2);}
+.farmacia-row .dia-tag{
+  flex:none;width:76px;text-align:center;font-size:.72rem;font-weight:800;text-transform:uppercase;
+  color:var(--navy-deep);background:var(--cream);border-radius:999px;padding:6px 8px;
+}
+.farmacia-row.is-today .dia-tag{background:var(--gold);color:var(--navy-deep);}
+.farmacia-row > div{flex:1;display:flex;flex-direction:column;}
+.farmacia-row b{color:var(--navy-deep);font-size:.95rem;}
+.farmacia-row .addr{font-size:.8rem;color:var(--gray-dark);}
+
 @media (max-width:880px){
   .identidad-grid{grid-template-columns:1fr;}
   .sumate{grid-template-columns:1fr;padding:40px 26px;}
