@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Vidriera Digital — Calzada Compra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Vidriera digital de la Cámara de Comercio de Rafael Calzada: buscá con tus palabras y encontrá al vecino que lo tiene, en tarjetas o en el mapa.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="index.html" class="brand">
+      <img src="assets/img/logo.png" alt="Logo Cámara de Comercio Rafael Calzada">
+      <div class="brand-text">
+        <div class="b1">Calzada Compra</div>
+        <div class="b2">Cámara de Comercio Rafael Calzada</div>
+      </div>
+    </a>
+    <nav class="links">
+      <a href="index.html#identidad">Nuestro Barrio</a>
+      <a href="vidriera.html">Vidriera Digital</a>
+      <a href="vidriera.html#fase2">Comparar Productos</a>
+      <a href="farmacias.html">Farmacias de turno</a>
+      <a href="index.html#sumate">Sumá tu comercio</a>
+    </nav>
+    <div class="nav-actions" id="navActions"></div>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Vidriera Digital</div>
+    <div class="eyebrow">Vidriera Digital</div>
+    <h1 class="serif">Buscá como en Mercado Libre. Encontrá al vecino que lo tiene.</h1>
+    <p class="lead">Contanos qué necesitás con tus propias palabras — Calzada Compra busca entre los comercios socios de la Cámara y te muestra quién lo tiene, cerca tuyo, en tarjetas o directo en el mapa.</p>
+  </div>
+</section>
+
+<section id="vidriera" style="padding-top:44px;">
+  <div class="wrap">
+    <div class="search-box">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Ej: 'se me cortó la luz', 'carne para el asado', 'un regalo para mi mamá'...">
+        <select id="rubroSelect"></select>
+        <button class="btn btn-navy" onclick="runSearch()">Buscar</button>
+      </div>
+      <div class="chips" id="chipsRow"></div>
+    </div>
+    <div class="results-meta">
+      <span id="resultsCount"></span>
+      <div class="results-meta-right">
+        <div class="view-toggle">
+          <button id="viewCardsBtn" class="active">🗂️ Tarjetas</button>
+          <button id="viewMapBtn">🗺️ Mapa</button>
+        </div>
+        <button class="clear-btn" onclick="clearSearch()">Ver todos los comercios</button>
+      </div>
+    </div>
+    <div class="grid-cards" id="cardsGrid"></div>
+    <div id="mapView" class="hidden"></div>
+    <p class="example-tag" id="mapNote">* El mapa usa OpenStreetMap como capa de base para esta demo (sin costo ni API key). Cuando la Cámara tenga una API key de Google Maps, esta capa se reemplaza por Google Maps manteniendo los mismos marcadores.</p>
+  </div>
+</section>
+
+<section class="section-alt" id="fase2">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="fase2-banner">Próximamente · Fase 2</span>
+      <h2 class="serif">Comparar productos entre comercios, en un solo lugar</h2>
+      <p>Cuando los comercios de la Cámara tengan su propia página web (Espar Co. se la ofrece a cada uno que quiera sumarse), Calzada Compra va a poder mostrar, debajo del buscador, una tabla comparativa como esta — con foto, comercio, precio si está disponible y su información de contacto.</p>
+    </div>
+    <div class="compare-table-wrap">
+      <table class="compare">
+        <thead><tr><th>Producto</th><th>Comercio</th><th>Precio</th><th>Contacto</th></tr></thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+    </div>
+    <p class="example-tag">* Tabla de ejemplo ilustrativo, con datos ficticios — todavía no conectada a comercios reales.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="assets/img/logo.png" alt="Logo">
+        <div>
+          <div style="color:#fff;font-weight:700;">Cámara de Comercio Rafael Calzada</div>
+          <div style="font-size:.78rem;">Nueva Gestión · Plan Integral 2026–2028</div>
+        </div>
+      </div>
+      <div class="foot-tagline">"Soy tu vecino, compra en Calzada"</div>
+    </div>
+    <div class="foot-bottom">
+      <span>Prototipo de demostración — Calzada Compra</span>
+      <span>Un desarrollo de Espar Co. para la Cámara de Comercio de Rafael Calzada</span>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle">Sumate a Calzada Compra</h3>
+    <p class="sub" id="modalSub">Elegí cómo querés participar.</p>
+    <div class="tabs" id="modalTabs">
+      <button id="tabLogin" onclick="switchTab('login')">Iniciar sesión</button>
+      <button id="tabVecino" onclick="switchTab('vecino')">Soy vecino</button>
+      <button id="tabComerciante" onclick="switchTab('comerciante')">Soy comerciante</button>
+    </div>
+
+    <div class="pane" id="paneLogin">
+      <form class="form-panel" id="formLogin" onsubmit="return submitLogin(event)">
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="loginEmail" required></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword" required></div>
+        <p class="field-error" id="loginError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Ingresar</button>
+        <p class="form-note">¿Todavía no tenés cuenta? <a href="#" class="modal-link" onclick="switchTab('vecino');return false;">Registrate como vecino</a> o <a href="#" class="modal-link" onclick="switchTab('comerciante');return false;">sumá tu comercio</a>.</p>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmLogin">
+        <div class="check">✓</div>
+        <h3>¡Bienvenido/a de nuevo!</h3>
+        <p id="loginWelcomeMsg"></p>
+      </div>
+    </div>
+
+    <div class="pane" id="paneVecino">
+      <form class="form-panel" id="formVecino" onsubmit="return submitForm(event,'vecino')">
+        <div class="form-group"><label>Nombre y apellido</label><input type="text" id="vecinoNombre" required></div>
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="vecinoEmail" required></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="vecinoTelefono" required placeholder="11 1234 5678"></div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="vecinoPassword" required>
+          <ul class="pw-checklist" id="vecinoPwChecklist">
+            <li data-rule="len">Mínimo 8 caracteres</li>
+            <li data-rule="upper">Una letra mayúscula</li>
+            <li data-rule="num">Un número</li>
+          </ul>
+        </div>
+        <div class="form-group"><label>Confirmar contraseña</label><input type="password" id="vecinoPassword2" required></div>
+        <div class="form-group"><label>Domicilio</label><input type="text" id="vecinoDomicilio" required placeholder="Calle y altura, Rafael Calzada"></div>
+        <p class="field-error" id="vecinoFormError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Crear mi cuenta</button>
+        <p class="form-note">¿Ya tenés cuenta? <a href="#" class="modal-link" onclick="switchTab('login');return false;">Iniciar sesión</a>.<br>Maqueta de demostración: tu cuenta se guarda solo en este navegador (todavía no hay una base de datos compartida real).</p>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmVecino">
+        <div class="check">✓</div>
+        <h3>¡Listo!</h3>
+        <p>Ya quedaste registrado como vecino de Calzada Compra en este navegador. En la versión real con base de datos compartida, tu cuenta y tu domicilio van a servir para recomendarte los comercios más cercanos.</p>
+      </div>
+    </div>
+
+    <div class="pane" id="paneComerciante">
+      <form class="form-panel" id="formComerciante" onsubmit="return submitForm(event,'comerciante')">
+        <div class="form-group"><label>Nombre del comercio</label><input type="text" id="comercianteNombre" required></div>
+        <div class="form-group"><label>Rubro</label>
+          <select required id="rubroFormSelect"></select>
+        </div>
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="comercianteEmail" required></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="comercianteTelefono" required placeholder="11 1234 5678"></div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="comerciantePassword" required>
+          <ul class="pw-checklist" id="comerciantePwChecklist">
+            <li data-rule="len">Mínimo 8 caracteres</li>
+            <li data-rule="upper">Una letra mayúscula</li>
+            <li data-rule="num">Un número</li>
+          </ul>
+        </div>
+        <div class="form-group"><label>Confirmar contraseña</label><input type="password" id="comerciantePassword2" required></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="comercianteDireccion" required placeholder="Calle y altura, Rafael Calzada"></div>
+        <div class="form-group"><label>¿Ya tenés sitio web?</label>
+          <select id="tieneSitio"><option value="no">No, me gustaría tener uno</option><option value="si">Sí, ya tengo</option></select>
+        </div>
+        <p class="field-error" id="comercianteFormError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Sumar mi comercio</button>
+        <p class="form-note">¿Ya tenés cuenta? <a href="#" class="modal-link" onclick="switchTab('login');return false;">Iniciar sesión</a>.<br>Maqueta de demostración: tu cuenta se guarda solo en este navegador. Ser socio de la Cámara implica el pago de una cuota societaria.</p>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmComerciante">
+        <div class="check">✓</div>
+        <h3>¡Listo!</h3>
+        <p>Así quedaría tu comercio dado de alta en la vidriera digital. Si marcaste que no tenés sitio web, Espar Co. te contacta para ofrecerte el desarrollo.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/map.js"></script>
+</body>
+</html>
