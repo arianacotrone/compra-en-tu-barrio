@@ -13,7 +13,6 @@ assets/
   style.css              ← todo el diseño
   site.js                ← toda la lógica compartida (buscador, cuentas, farmacias) — se reutiliza en las 3 páginas
   map.js                 ← la capa de mapa de la vidriera digital (ver más abajo)
-  semantic.js            ← búsqueda semántica en el navegador (ver más abajo) — solo se usa en vidriera.html
   img/logo.png           ← logo real de la Cámara
   img/comercios/*.png    ← logo (placeholder) de cada comercio, usado en las tarjetas
   data/comercios.json    ← el catálogo de comercios (acá se reemplaza por datos reales)
@@ -70,33 +69,21 @@ El botón "Ingresar / Registrarme" del menú (visible en las tres páginas) abre
 - **Las cuentas se guardan de verdad — pero solo en tu navegador**: al registrarte, tu cuenta (nombre, contacto, y la contraseña ya *hasheada*, nunca en texto plano) se guarda en el `localStorage` del navegador donde estás probando el sitio. Eso significa que podés cerrar la página, volver a abrirla y hacer login con esa cuenta — pero es una base de datos local a ese navegador y esa computadora, **no una base de datos compartida en un servidor**: si entrás desde otro navegador o borrás los datos del sitio, esa cuenta no va a estar. Para una base de datos real y compartida (con recuperación de contraseña, etc.) hace falta un backend — avisame cuando quieran dar ese paso.
 - Al iniciar sesión, el botón de "Ingresar/Registrarme" del menú cambia por un saludo con tu nombre y un botón para salir.
 
-## El buscador: motor por palabras clave + motor semántico, combinados
+## El buscador: simple, predecible, basado en las tags
 
-El buscador de la vidriera combina **dos motores** para que sea rápido, confiable y entienda cada vez más el significado de lo que escribís. Esto cambió en esta última vuelta, después de que probaras el sitio de verdad y me mostraras dos casos concretos que no andaban bien — quedan documentados abajo porque explican por qué el diseño es "motor por palabras clave siempre + motor semántico como refuerzo", y no "solo motor semántico" como era al principio.
+Después de varias vueltas con un motor más elaborado (sinónimos + TF-IDF, y en un momento hasta un modelo semántico) que terminaba dando resultados difíciles de explicar, el buscador quedó simplificado a propósito: **sin sinónimos ni modelos de por medio, matchea directamente contra lo que carga la Cámara para cada comercio**, sobre todo la columna `tags` de `comercios.csv` — pensada justo para esto.
 
-### El motor por palabras clave (`assets/site.js`) — siempre activo, instantáneo
+Cómo puntúa cada comercio para una búsqueda:
 
-Este es el motor de base, el que corre siempre, para toda búsqueda, sin depender de que ningún modelo termine de cargar:
+1. **Coincidencia literal en una tag** (por ejemplo buscar "kiosco" y que el comercio tenga la tag "kiosco"): el matcheo más fuerte.
+2. **Alguna palabra de la búsqueda aparece en las tags** del comercio: pesa bastante.
+3. **Alguna palabra de la búsqueda aparece en el nombre, la descripción o el rubro**: pesa menos, pero también cuenta.
 
-- **Normalización y stopwords**: saca acentos, mayúsculas y palabras vacías ("de", "para", "un", etc.).
-- **Stemming en español**: un stemmer liviano de sufijos, para que "anteojos"/"anteojo", "electricista"/"electricidad" o "carnicería"/"carnicero" se traten como la misma raíz sin necesitar un diccionario enorme.
-- **Expansión por sinónimos**: un mini-tesauro por concepto (por ejemplo "luz", "corte", "tablero", "cortocircuito" y "electricista" cuentan como lo mismo). Después de que me mostraste que "remera" sola no encontraba nada, amplié bastante este tesauro: ahora "remera", "buzo", "pantalón", "campera", "zapatillas", "pollera", "jean" y varias palabras más de ropa están cargadas directamente, además de vocabulario nuevo para carnicería (bife, chorizo, matambre...), óptica (lentes de sol, gafas), abogados (demanda, denuncia), carpintería, ferretería y almacén. Esto solo, sin ningún modelo de por medio, ya resuelve los casos puntuales que me mostraste.
-- **TF-IDF + similitud de coseno**: la técnica clásica de los motores de búsqueda de toda la vida — le da más peso a las palabras distintivas de cada comercio y rankea los resultados por qué tan parecidos son a la consulta.
+Los resultados se ordenan por ese puntaje, de mayor a menor. Sigue habiendo normalización de acentos/mayúsculas y un stemmer liviano (para que "remera" y "remeras", o "carnicería" y "carnicero", cuenten como lo mismo), pero nada de tesauros de sinónimos ni de modelos de lenguaje: si un comercio tiene que aparecer para cierta búsqueda, la forma confiable de lograrlo es que esa palabra (o una bien parecida) esté en sus `tags` — por eso las tags son el campo más importante para completar bien al cargar cada comercio.
 
-Es instantáneo y 100% predecible, pero depende de que la palabra (o un sinónimo suyo) ya esté cargada a mano en algún tag o en el tesauro.
+**Importante**: si buscás algo y da 0 resultados, puede ser genuinamente porque ningún comercio cargado ofrece eso todavía (por ejemplo, hoy el catálogo real no tiene ningún comercio de indumentaria) — no significa que el buscador esté fallando. Ahí la oportunidad es invitar a ese rubro a sumarse a la Cámara, tal como dice el mensaje que aparece en pantalla.
 
-### El motor semántico (`assets/semantic.js`) — refuerzo, no reemplazo
-
-Además, la vidriera carga en segundo plano un modelo de embeddings (`Xenova/paraphrase-multilingual-MiniLM-L12-v2`) que entiende el significado de lo que escribís aunque la palabra exacta no esté cargada en ningún lado, corriendo **100% en el navegador de quien busca, sin backend, sin cuenta en la nube ni API key**:
-
-- El modelo se descarga una sola vez desde la CDN pública de Hugging Face (unos cuantos MB) la primera vez que alguien entra a la vidriera, y el propio navegador lo guarda en caché para las próximas visitas — no ocupa espacio en tu hosting.
-- Mientras se descarga aparece un aviso chiquito abajo del buscador ("🧠 Preparando el buscador inteligente…"); cuando ya está listo, cambia a "🧠 Búsqueda inteligente activa".
-- **Arreglé el problema de que quedaba trabado**: antes, si alguien buscaba justo mientras el modelo todavía se estaba descargando (la descarga real puede tardar bastante más de lo que yo había calculado, según la conexión), la búsqueda esperaba sin límite y parecía colgada. Ahora cada búsqueda espera como máximo 8 segundos al modelo: si no llegó a tiempo, esa búsqueda puntual se resuelve con el motor por palabras clave y la descarga sigue en segundo plano para las próximas.
-- **Ya no puede "tapar" al motor por palabras clave con un resultado raro**: antes, si el modelo semántico daba un puntaje alto para un resultado sin sentido, ese resultado se mostraba igual (así apareció "Carnicería El Novillo Calzadense" al buscar "buzo"). Ahora el motor por palabras clave se calcula siempre primero, como base confiable, y el motor semántico solo se suma cuando su puntaje de similitud supera un umbral bastante más estricto que antes (`SEMANTIC_SCORE_THRESHOLD`, subido de `0.42` a `0.6`). Un resultado nunca depende solo de un puntaje semántico dudoso.
-- Para seguir afinando ese umbral con casos reales, cada búsqueda deja en la consola del navegador (F12 → pestaña "Console") los 5 puntajes semánticos más altos para esa consulta — si algún día querés que ajustemos el número con vos mirando esos valores, es la forma más rápida de hacerlo.
-- **Si el modelo no llega a cargar nunca** (sin conexión la primera vez, algún bloqueo de red), el sitio no se rompe: sigue funcionando solo con el motor por palabras clave, sin avisos de error.
-
-**Sobre cómo se probó esto**: el entorno donde armo estos archivos no tiene salida a redes externas, así que no puedo descargar el modelo real de Hugging Face ni probarlo con búsquedas de verdad — todo lo que valido acá es la lógica de conexión (con un modelo de prueba simulado), no la calidad real del modelo. Vos sí probaste con el modelo real en tu navegador, y así encontramos los dos problemas de arriba (se quedaba esperando sin límite, y un puntaje semántico raro tapaba al buscador por palabras clave) — quedaron arreglados con lo que describí arriba. El umbral (`0.6`) sigue siendo una estimación: si en el uso real seguís viendo resultados raros o de menos, los puntajes en la consola del navegador nos dan los números concretos para afinarlo juntos.
+**Enter para buscar**: además del botón "Buscar", ahora tocar Enter con el cursor en el campo de búsqueda dispara la misma búsqueda.
 
 ## El catálogo tiene 30 comercios de ejemplo (3 por rubro)
 
