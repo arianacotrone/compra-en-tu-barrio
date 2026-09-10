@@ -19,7 +19,7 @@
    eso hace que se descarte toda la caché vieja sola.
    ========================================================= */
 
-const CACHE_NAME = 'calzada-digital-v2';
+const CACHE_NAME = 'calzada-digital-v6';
 
 // El "app shell": lo mínimo para que el sitio abra ya instalado, aunque
 // no haya conexión en ese momento. Las imágenes de logos de cada comercio
