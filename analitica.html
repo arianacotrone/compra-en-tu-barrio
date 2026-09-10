@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tu analítica — Calzada Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Seguidores, likes, clicks a WhatsApp y consultas más populares de tu comercio en Calzada Digital.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b2038">
+<link rel="apple-touch-icon" href="assets/img/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Calzada Digital">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/calzada-digital.css">
+</head>
+<body data-page="analitica">
+
+<header>
+  <div class="wrap nav">
+    <a href="index.html" class="brand">
+      <img src="assets/img/logo.png" alt="Calzada Digital">
+      <div class="brand-text">
+        <div class="b1">Calzada Digital</div>
+        <div class="b2">Cámara de Comercio Rafael Calzada</div>
+      </div>
+    </a>
+    <div class="nav-collapse" id="navCollapse">
+      <nav class="links">
+        <a href="vidriera.html">Comercios</a>
+        <a href="farmacias.html">Farmacias</a>
+        <div class="nav-dropdown" id="navDropdown">
+          <button class="nav-dropdown-toggle" id="navDropdownToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="navDropdownMenu">
+            Menú
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="nav-dropdown-menu" id="navDropdownMenu">
+            <a href="conoce-el-barrio.html">Conocé el barrio</a>
+            <a href="vidriera.html#fase2">Comparar Productos</a>
+            <a href="index.html#sumate">Sumá tu comercio</a>
+          </div>
+        </div>
+        <!-- Instagram de la Cámara: FALTA EL LINK REAL. Reemplazá el href de abajo apenas la Cámara tenga su cuenta de Instagram. -->
+        <a class="nav-instagram" href="https://instagram.com/COMPLETAR-INSTAGRAM-CAMARA" target="_blank" rel="noopener" aria-label="Instagram de la Cámara de Comercio (completar link)" title="Completar: falta el link de Instagram de la Cámara">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </nav>
+      <div class="nav-actions" id="navActions"></div>
+    </div>
+    <button class="burger" id="burgerBtn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="navCollapse">
+      <svg class="burger-icon burger-icon-open" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg class="burger-icon burger-icon-close" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Analítica</div>
+    <div class="eyebrow">Tu analítica</div>
+    <h1 class="serif">Cómo le está yendo a tu comercio en Calzada Digital.</h1>
+    <p class="lead">Seguidores, likes, clicks a WhatsApp y las consultas que más te trajeron gente — visible solo para vos.</p>
+  </div>
+</section>
+
+<section style="padding-top:36px;padding-bottom:56px;">
+  <div class="wrap">
+    <div id="cdAnalitica"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="assets/img/logo.png" alt="Calzada Digital">
+        <div>
+          <div style="color:#fff;font-weight:700;">Cámara de Comercio Rafael Calzada</div>
+          <div style="font-size:.78rem;">Nueva Gestión · Plan Integral 2026–2028</div>
+        </div>
+      </div>
+      <div class="foot-tagline">"Soy tu vecino, compra en Calzada"</div>
+    </div>
+    <div class="foot-bottom">
+      <span>Prototipo de demostración — Calzada Digital</span>
+      <span>Un desarrollo de Espar Co. para la Cámara de Comercio de Rafael Calzada</span>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle">Sumate a Calzada Digital</h3>
+    <p class="sub" id="modalSub">Elegí cómo querés participar.</p>
+    <div class="tabs" id="modalTabs">
+      <button id="tabLogin" onclick="switchTab('login')">Iniciar sesión</button>
+      <button id="tabVecino" onclick="switchTab('vecino')">Soy vecino</button>
+    </div>
+
+    <div class="pane" id="paneLogin">
+      <form class="form-panel" id="formLogin" onsubmit="return submitLogin(event)">
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="loginEmail" required maxlength="120" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingresá un correo válido, con @ y un dominio (ej: nombre@ejemplo.com)"></div>
+        <div class="form-group"><label>Contraseña</label>
+          <div class="pw-field">
+            <input type="password" id="loginPassword" required>
+            <button type="button" class="pw-toggle" data-target="loginPassword" aria-label="Mostrar contraseña">👁️</button>
+          </div>
+        </div>
+        <p class="field-error" id="loginError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Ingresar</button>
+        <p class="form-note">¿Todavía no tenés cuenta? <a href="#" class="modal-link" onclick="switchTab('vecino');return false;">Registrate como vecino</a> o <a class="modal-link" href="index.html#sumate">sumá tu comercio</a>.</p>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmLogin">
+        <div class="check">✓</div>
+        <h3>¡Bienvenido/a de nuevo!</h3>
+        <p id="loginWelcomeMsg"></p>
+      </div>
+    </div>
+
+    <div class="pane" id="paneVecino">
+      <form class="form-panel" id="formVecino" onsubmit="return submitForm(event,'vecino')">
+        <div class="form-group"><label>Nombre y apellido</label><input type="text" id="vecinoNombre" required maxlength="100"></div>
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="vecinoEmail" required maxlength="120" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingresá un correo válido, con @ y un dominio (ej: nombre@ejemplo.com)"></div>
+        <div class="form-group"><label>Teléfono</label>
+          <div class="phone-input"><span class="phone-input-prefix">11</span><input type="tel" id="vecinoTelefono" required inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="1234 5678" title="Los 8 números que siguen del 11, sin espacios"></div>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <div class="pw-field">
+            <input type="password" id="vecinoPassword" required minlength="8" maxlength="72">
+            <button type="button" class="pw-toggle" data-target="vecinoPassword" aria-label="Mostrar contraseña">👁️</button>
+          </div>
+          <div class="pw-strength"><div class="pw-strength-fill" id="vecinoPwStrengthFill"></div></div>
+          <span class="pw-strength-label" id="vecinoPwStrengthLabel"></span>
+          <ul class="pw-checklist" id="vecinoPwChecklist">
+            <li data-rule="len">Mínimo 8 caracteres</li>
+            <li data-rule="upper">Una letra mayúscula</li>
+            <li data-rule="num">Un número</li>
+          </ul>
+        </div>
+        <div class="form-group"><label>Confirmar contraseña</label>
+          <div class="pw-field">
+            <input type="password" id="vecinoPassword2" required maxlength="72">
+            <button type="button" class="pw-toggle" data-target="vecinoPassword2" aria-label="Mostrar contraseña">👁️</button>
+          </div>
+        </div>
+        <div class="form-group"><label>Domicilio</label><input type="text" id="vecinoDomicilio" required maxlength="150" placeholder="Calle y altura, Rafael Calzada"></div>
+        <div class="form-group">
+          <label>Año de nacimiento (opcional)</label>
+          <input type="number" id="vecinoAnioNacimiento" min="1920" max="2013" placeholder="Ej: 1990">
+          <label class="checkbox-inline"><input type="checkbox" id="vecinoAnioNoDecir" onchange="toggleAnioNacimiento()"> Prefiero no decirlo</label>
+        </div>
+        <div class="form-group">
+          <label>Género (opcional)</label>
+          <select id="vecinoGenero">
+            <option value="">Prefiero no decirlo</option>
+            <option value="femenino">Femenino</option>
+            <option value="masculino">Masculino</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <p class="field-error" id="vecinoFormError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Crear mi cuenta</button>
+        <p class="form-note">¿Ya tenés cuenta? <a href="#" class="modal-link" onclick="switchTab('login');return false;">Iniciar sesión</a>.<br>Maqueta de demostración: tu cuenta se guarda solo en este navegador (todavía no hay una base de datos compartida real).</p>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmVecino">
+        <div class="check">✓</div>
+        <h3>¡Listo!</h3>
+        <p>Ya quedaste registrado como vecino de Calzada Digital en este navegador. En la versión real con base de datos compartida, tu cuenta y tu domicilio van a servir para recomendarte los comercios más cercanos.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: consultar saldo de puntos (para cualquier vecino, con o sin cuenta) -->
+<div class="modal-overlay" id="saldoModalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeSaldoModal()">✕</button>
+    <h3>🏆 Puntos de fidelidad</h3>
+    <p class="sub">Consultá cuántos puntos tenés acumulados con tu número de teléfono.</p>
+
+    <form class="form-panel" id="saldoForm" onsubmit="return consultarYMostrarSaldo(event)">
+      <div class="form-group"><label>Teléfono</label>
+      <div class="phone-input"><span class="phone-input-prefix">11</span><input type="tel" id="saldoTelefono" required inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="1234 5678" title="Los 8 números que siguen del 11, sin espacios"></div>
+    </div>
+      <p class="field-error" id="saldoError"></p>
+      <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Consultar</button>
+    </form>
+    <div class="confirm-panel form-panel hidden" id="saldoResultado">
+      <div class="check">🏆</div>
+      <h3><span id="saldoNumero">0</span> puntos</h3>
+      <p>Se acumula 1 punto cada $1.000 de compra en los comercios socios de la Cámara. Canjealos por cafés o vouchers en los comercios participantes.</p>
+      <button class="btn btn-outline btn-sm" type="button" onclick="volverAConsultarSaldo()">Consultar otro teléfono</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: el comercio suma o canjea puntos a un vecino -->
+<div class="modal-overlay" id="puntosModalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closePuntosModal()">✕</button>
+    <h3>Puntos de fidelidad</h3>
+    <p class="sub">Sumá o canjeá puntos para un vecino usando su número de teléfono.</p>
+    <div class="tabs">
+      <button id="tabSumar" onclick="switchPuntosTab('sumar')">Sumar puntos</button>
+      <button id="tabCanjear" onclick="switchPuntosTab('canjear')">Canjear puntos</button>
+    </div>
+
+    <div class="pane" id="paneSumar">
+      <form class="form-panel" id="formSumarPuntos" onsubmit="return submitSumarPuntos(event)">
+        <div class="form-group"><label>Teléfono del vecino</label>
+          <div class="phone-input"><span class="phone-input-prefix">11</span><input type="tel" id="sumarTelefono" required inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="1234 5678" title="Los 8 números que siguen del 11, sin espacios"></div>
+        </div>
+        <div class="form-group"><label>Monto de la compra ($)</label><input type="number" min="1" max="100000" step="1" id="sumarMonto" required placeholder="Ej: 4500" oninput="updatePuntosPreview()"></div>
+        <p class="form-note" id="sumarPreview">Se sumarán 0 puntos (1 punto cada $1.000 de compra).</p>
+        <p class="field-error" id="sumarPuntosError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Sumar puntos</button>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmSumarPuntos">
+        <div class="check">✓</div>
+        <h3>¡Listo!</h3>
+        <p id="sumarPuntosMsg"></p>
+      </div>
+    </div>
+
+    <div class="pane" id="paneCanjear">
+      <form class="form-panel" id="formCanjearPuntos" onsubmit="return submitCanjearPuntos(event)">
+        <div class="form-group"><label>Teléfono del vecino</label>
+          <div class="phone-input"><span class="phone-input-prefix">11</span><input type="tel" id="canjearTelefono" required inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="1234 5678" title="Los 8 números que siguen del 11, sin espacios"></div>
+        </div>
+        <div class="form-group"><label>Puntos a descontar</label><input type="number" min="1" step="1" id="canjearPuntos" required placeholder="Ej: 100"></div>
+        <div class="form-group"><label>¿Por qué lo canjea?</label><input type="text" id="canjearDescripcion" required maxlength="200" placeholder="Ej: 1 café"></div>
+        <p class="field-error" id="canjearPuntosError"></p>
+        <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Canjear puntos</button>
+      </form>
+      <div class="confirm-panel form-panel hidden" id="confirmCanjearPuntos">
+        <div class="check">✓</div>
+        <h3>¡Listo!</h3>
+        <p id="canjearPuntosMsg"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: "Mi comercio" — el propio comercio carga/actualiza los datos de
+     su tarjeta (solo aparece en el menú una vez que la Cámara lo aprueba) -->
+<div class="modal-overlay" id="miComercioModalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeMiComercioModal()">✕</button>
+    <h3>🏪 Mi comercio</h3>
+    <p class="sub">Estos son los datos que se muestran en tu tarjeta de la vidriera — actualizalos cuando quieras.</p>
+
+    <form class="form-panel" id="formMiComercio" onsubmit="return submitMiComercio(event)">
+      <div class="form-group"><label>Rubro</label><select id="miComercioRubro"></select></div>
+      <div class="form-group"><label>Descripción</label><textarea id="miComercioDescripcion" rows="3" maxlength="500" placeholder="Contá brevemente qué ofrecés"></textarea><span class="char-counter" id="miComercioDescripcionCount"></span></div>
+      <div class="form-group"><label>Dirección</label><input type="text" id="miComercioDireccion" maxlength="150" placeholder="Calle y altura, Rafael Calzada"><span class="char-counter" id="miComercioDireccionCount"></span></div>
+      <div class="form-group"><label>Teléfono</label>
+      <div class="phone-input"><span class="phone-input-prefix">11</span><input type="tel" id="miComercioTelefono" inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="1234 5678" title="Los 8 números que siguen del 11, sin espacios"></div>
+    </div>
+      <div class="form-group"><label>¿Tenés sitio web?</label>
+        <select id="miComercioTieneSitio" onchange="toggleMiComercioSitioWeb()">
+          <option value="no">No</option>
+          <option value="si">Sí</option>
+        </select>
+      </div>
+      <div class="form-group hidden" id="miComercioSitioWebGroup">
+        <label>URL de tu sitio web</label>
+        <input type="text" id="miComercioSitioWeb" maxlength="200" placeholder="www.tucomercio.com"><span class="char-counter" id="miComercioSitioWebCount"></span>
+      </div>
+      <div class="form-group"><label>Etiquetas de búsqueda</label><input type="text" id="miComercioTags" maxlength="300" placeholder="Separadas por ; — ej: kiosco;bebidas;golosinas"><span class="char-counter" id="miComercioTagsCount"></span></div>
+      <div class="form-group">
+        <label>Logo de tu comercio</label>
+        <img id="miComercioLogoActual" class="logo-preview hidden" alt="Tu logo actual">
+        <input type="file" id="miComercioLogo" accept="image/png,image/jpeg,image/webp">
+        <img id="miComercioLogoPreview" class="logo-preview hidden" alt="Vista previa del nuevo logo">
+        <span class="form-note" style="display:block;margin-top:4px;">Dejalo vacío para mantener el logo que ya tenés — si elegís un archivo nuevo, reemplaza al anterior.</span>
+        <div class="logo-historial hidden" id="miComercioLogoHistorial">
+          <span class="form-note" style="display:block;margin-bottom:6px;">O volvé a uno de tus logos anteriores:</span>
+          <div class="logo-historial-lista" id="miComercioLogoHistorialLista"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Oferta de esta semana (opcional)</label>
+        <input type="text" id="miComercioOferta" maxlength="200" placeholder="Ej: 20% off en fiambres de pierna"><span class="char-counter" id="miComercioOfertaCount"></span>
+        <span class="form-note" style="display:block;margin-top:4px;">Si la cargás, va a aparecer en "Ofertas de la semana" de la portada mientras esté vigente.</span>
+      </div>
+      <div class="form-group" id="miComercioOfertaVenceGroup">
+        <label>¿Hasta cuándo vale? (opcional)</label>
+        <input type="date" id="miComercioOfertaVence">
+      </div>
+      <p class="field-error" id="miComercioError"></p>
+      <button class="btn btn-navy" type="submit" style="width:100%;justify-content:center;">Guardar cambios</button>
+      <p class="form-note hidden" id="miComercioGuardadoMsg">✓ Guardado — ya se actualizó tu tarjeta en la vidriera.</p>
+    </form>
+  </div>
+</div>
+
+<div id="cdBottomNav"></div>
+
+<script src="assets/site.js"></script>
+<script src="assets/categorias.js"></script>
+<script src="assets/calzada-digital.js"></script>
+</body>
+</html>

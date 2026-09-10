@@ -1,0 +1,74 @@
+[
+  {
+    "id": "h1",
+    "comercioId": "ferreteria-don-osvaldo",
+    "comercioNombre": "Ferretería Don Osvaldo",
+    "rubro": "ferreteria",
+    "tipo": "historia",
+    "texto": "15% off en pinturas látex — válido esta semana",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-10T12:35:55Z",
+    "expiraAt": "2026-09-11T12:35:55Z",
+    "estado": "aprobado"
+  },
+  {
+    "id": "h2",
+    "comercioId": "corralon-san-martin",
+    "comercioNombre": "Corralón San Martín",
+    "rubro": "corralon",
+    "tipo": "historia",
+    "texto": "Llegó cemento nuevo — reservá el tuyo",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-09T18:35:55Z",
+    "expiraAt": "2026-09-10T18:35:55Z",
+    "estado": "aprobado"
+  },
+  {
+    "id": "h3",
+    "comercioId": "pinturas-beltran",
+    "comercioNombre": "Pinturas Beltrán",
+    "rubro": "pintureria",
+    "tipo": "banner",
+    "texto": "Mezclamos tu color al tono en el momento",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-10T08:35:55Z",
+    "expiraAt": "2026-09-13T08:35:55Z",
+    "estado": "aprobado"
+  },
+  {
+    "id": "h4",
+    "comercioId": "panaderia-sol",
+    "comercioNombre": "Panadería Sol",
+    "rubro": "panaderia",
+    "tipo": "historia",
+    "texto": "2x1 en facturas de 8 a 10 hs",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-10T13:35:55Z",
+    "expiraAt": "2026-09-11T13:35:55Z",
+    "estado": "aprobado"
+  },
+  {
+    "id": "h5",
+    "comercioId": "bar-de-la-estacion",
+    "comercioNombre": "Bar de la Estación",
+    "rubro": "bar",
+    "tipo": "historia",
+    "texto": "Café + medialuna a $2.500",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-10T09:35:55Z",
+    "expiraAt": "2026-09-11T09:35:55Z",
+    "estado": "aprobado"
+  },
+  {
+    "id": "h6",
+    "comercioId": "taller-beto",
+    "comercioNombre": "Taller Beto",
+    "rubro": "automovil",
+    "tipo": "banner",
+    "texto": "Presupuesto de frenos sin cargo",
+    "imagenUrl": "",
+    "publicadoAt": "2026-09-10T04:35:55Z",
+    "expiraAt": "2026-09-15T14:35:55Z",
+    "estado": "aprobado"
+  }
+]

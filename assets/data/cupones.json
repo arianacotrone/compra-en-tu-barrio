@@ -1,0 +1,26 @@
+[
+  {
+    "id": "c1",
+    "comercioId": "bar-de-la-estacion",
+    "comercioNombre": "Bar de la Estación",
+    "titulo": "Café + medialuna gratis",
+    "costoPuntos": 200,
+    "activo": true
+  },
+  {
+    "id": "c2",
+    "comercioId": "panaderia-sol",
+    "comercioNombre": "Panadería Sol",
+    "titulo": "10% off en tu próxima compra",
+    "costoPuntos": 150,
+    "activo": true
+  },
+  {
+    "id": "c3",
+    "comercioId": "taller-beto",
+    "comercioNombre": "Taller Beto",
+    "titulo": "Revisión gratis de frenos",
+    "costoPuntos": 500,
+    "activo": true
+  }
+]

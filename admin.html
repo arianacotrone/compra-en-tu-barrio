@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel de administración — Calzada Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/calzada-digital.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="index.html" class="brand">
+      <img src="assets/img/logo.png" alt="Calzada Digital">
+      <div class="brand-text">
+        <div class="b1">Calzada Digital</div>
+        <div class="b2">Panel de administración</div>
+      </div>
+    </a>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Administración</div>
+    <div class="eyebrow">Solo para la Cámara</div>
+    <h1 class="serif">Panel de administración</h1>
+    <p class="lead">Usuarios registrados y movimientos del sistema de puntos de fidelidad. Esta página no está enlazada desde el menú del sitio — guardá el link.</p>
+  </div>
+</section>
+
+<section style="padding-top:36px;">
+  <div class="wrap">
+
+    <div id="adminGate" class="search-box" style="max-width:420px;margin:0 auto;">
+      <div class="form-group">
+        <label>Clave de administrador</label>
+        <input type="password" id="adminPasswordInput" placeholder="••••••••">
+      </div>
+      <p class="field-error" id="adminError"></p>
+      <button class="btn btn-navy" style="width:100%;justify-content:center;" onclick="adminLogin()">Entrar</button>
+      <p class="form-note" id="adminBackendNote"></p>
+      <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+      <button class="btn btn-outline btn-sm" type="button" style="width:100%;justify-content:center;" onclick="probarConexionBackend()">🔧 Probar conexión con el backend</button>
+      <p class="form-note" id="testConexionResultado"></p>
+    </div>
+
+    <div id="adminPanel" class="hidden">
+      <div class="section-head">
+        <div class="eyebrow">Analítica</div>
+        <h2 class="serif">Visitantes</h2>
+        <p>Acá se muestra la cantidad de visitantes únicos de las últimas semanas. El análisis completo (navegación, comportamiento, búsquedas, segmentación por franja etaria y género, cruces entre variables) se procesa aparte, directamente sobre los registros del backend — para pedir el informe detallado, contactar a la Cámara.</p>
+      </div>
+      <div class="admin-stats" id="adminAnalyticsTotales"></div>
+      <div style="margin-bottom:56px;">
+        <button class="btn btn-outline btn-sm" type="button" onclick="exportarAnaliticaAdmin()">📄 Exportar analítica a Drive (CSV)</button>
+        <p class="form-note" id="adminExportarAnaliticaResultado"></p>
+      </div>
+
+      <div class="section-head">
+        <div class="eyebrow">Comercios registrados</div>
+        <h2 class="serif">Aprobación y cuota societaria</h2>
+        <p id="adminComerciosCount"></p>
+      </div>
+      <div class="compare-table-wrap" style="margin-bottom:56px;">
+        <table class="compare" id="adminComerciosTable">
+          <thead><tr><th>Logo</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Dirección</th><th>Rubro</th><th>Alta</th><th>Aprobación</th><th>Cuota</th><th>Acciones</th></tr></thead>
+          <tbody id="adminComerciosBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-head">
+        <div class="eyebrow">Vecinos registrados</div>
+        <h2 class="serif">Ordenados por puntos</h2>
+        <p id="adminVecinosCount"></p>
+      </div>
+      <div class="compare-table-wrap" style="margin-bottom:56px;">
+        <table class="compare" id="adminVecinosTable">
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Dirección</th><th>Año nac.</th><th>Género</th><th>Alta</th><th>Puntos</th></tr></thead>
+          <tbody id="adminVecinosBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-head">
+        <div class="eyebrow">Puntos de fidelidad</div>
+        <h2 class="serif">Movimientos y canjes</h2>
+        <p>Todo queda registrado acá para auditar (nunca se borra). Para anular un movimiento sospechoso, abrí la planilla de Google Sheets y escribí "anulado" en la columna "estado" de esa fila — deja de contar para el saldo del vecino sin perder el historial.</p>
+      </div>
+      <div class="compare-table-wrap" style="margin-bottom:56px;">
+        <table class="compare" id="adminMovimientosTable">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Comercio</th><th>Teléfono vecino</th><th>Detalle</th><th>Puntos</th><th>Estado</th></tr></thead>
+          <tbody id="adminMovimientosBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-head">
+        <div class="eyebrow">Calzada Digital</div>
+        <h2 class="serif">Historias y banners pendientes</h2>
+        <p>Revisá la imagen y el comprobante de cada envío y aprobalo o rechazalo — una vez aprobada, la historia o el banner aparece de inmediato en la vidriera.</p>
+      </div>
+      <div class="compare-table-wrap">
+        <table class="compare" id="cdAdminHistoriasTable">
+          <thead><tr><th>Comercio</th><th>Tipo</th><th>Imagen</th><th>Comprobante</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="cdAdminHistoriasBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom">
+      <span>Panel de administración — Calzada Digital</span>
+      <span>Uso interno de la Cámara de Comercio de Rafael Calzada</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/categorias.js"></script>
+<script src="assets/calzada-digital.js"></script>
+<script>
+  document.getElementById('adminBackendNote').textContent = hasBackend()
+    ? ''
+    : 'Todavía no configuraste el backend real (ver backend/Code.gs) — esto muestra solo lo guardado en localStorage de este navegador, a modo de demo. Clave de prueba: "' + ADMIN_LOCAL_DEMO_PASSWORD + '".';
+  document.getElementById('adminPasswordInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); adminLogin(); }
+  });
+</script>
+</body>
+</html>
